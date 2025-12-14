@@ -303,6 +303,7 @@
             <button onclick="dance()">Tanec</button>
             <button onclick="wave()">Mávnout</button>
             <button onclick="think()" class="think-btn">Přemýšlím</button>
+            <button onclick="safeJump()" style="background: #2ecc71;">Radostný skok</button>
             <button onclick="stopAll()">Zastavit</button>
             <button onclick="resetPosition()">Reset</button>
             <button onclick="toggleAura()" id="auraToggle" style="background: #f1c40f; color: #333;">Aura: ON</button>
@@ -1752,7 +1753,7 @@
                         } else {
                             // Po přesunu provést aktivitu
                             setTimeout(() => {
-                                const activities = ['walk', 'dance', 'wave', 'think'];
+                                const activities = ['walk', 'dance', 'wave', 'think', 'jump'];
                                 const randomActivity = activities[Math.floor(Math.random() * activities.length)];
                                 executeActivity(randomActivity);
                             }, 300);
@@ -1764,7 +1765,7 @@
                 }
             }
             
-            const activities = ['walk', 'dance', 'wave', 'think'];
+            const activities = ['walk', 'dance', 'wave', 'think', 'jump'];
             const randomActivity = activities[Math.floor(Math.random() * activities.length)];
             executeActivity(randomActivity);
         }
@@ -1783,6 +1784,9 @@
                     break;
                 case 'think':
                     safeThink();
+                    break;
+                case 'jump': // NOVÉ: Radostný skok
+                    safeJump();
                     break;
             }
         }
@@ -2166,6 +2170,140 @@
             }
             
             animateThinkUp();
+        }
+
+        // NOVÁ FUNKCE: Radostný skok do výšky
+        function jump() {
+            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
+            
+            state.isMoving = true;
+            state.currentAnimation = 'jump';
+            updateStatus("Radostný skok!");
+            
+            // Zapnout speciální auru pro skok
+            if (state.showAura) {
+                auraOverlay.style.boxShadow = 
+                    `0 0 50px 25px rgba(255, 255, 200, 0.9),
+                    0 0 100px 50px rgba(255, 240, 150, 0.8)`;
+                auraOverlay.style.background = 'radial-gradient(circle, rgba(255,255,220,0.95) 0%, rgba(255,230,120,0.85) 100%)';
+            }
+            
+            const startY = state.y;
+            const jumpHeight = 80; // Výška skoku
+            const jumpDuration = 800; // Doba skoku
+            const startTime = Date.now();
+            
+            // Úhly pro připravenou pozici před skokem
+            const prepLeftThigh = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE - 0.4;
+            const prepRightThigh = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE - 0.4;
+            const prepLeftCalf = -FIGURE.CALF_SPREAD_ANGLE + 0.8;
+            const prepRightCalf = FIGURE.CALF_SPREAD_ANGLE + 0.8;
+            const prepLeftUpperArm = FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE - 0.3;
+            const prepRightUpperArm = FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE - 0.3;
+            
+            // Fáze 1: Příprava na skok (pokrčení)
+            const prepDuration = 200;
+            
+            function prepareJump() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / prepDuration, 1);
+                
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                
+                state.leftThighAngle = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE + (prepLeftThigh - (FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE)) * easeProgress;
+                state.rightThighAngle = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE + (prepRightThigh - (FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE)) * easeProgress;
+                state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE + (prepLeftCalf - (-FIGURE.CALF_SPREAD_ANGLE)) * easeProgress;
+                state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE + (prepRightCalf - FIGURE.CALF_SPREAD_ANGLE) * easeProgress;
+                state.leftUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE + (prepLeftUpperArm - (FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE)) * easeProgress;
+                state.rightUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE + (prepRightUpperArm - (FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE)) * easeProgress;
+                
+                drawFigure();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(prepareJump);
+                } else {
+                    // Fáze 2: Skok
+                    const jumpStartTime = Date.now();
+                    performJump(jumpStartTime, startY, jumpHeight, jumpDuration);
+                }
+            }
+            
+            function performJump(jumpStartTime, originalY, height, duration) {
+                const elapsed = Date.now() - jumpStartTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Parabolický pohyb nahoru a dolů
+                const jumpProgress = progress * 2;
+                
+                if (jumpProgress <= 1) {
+                    // Fáze nahoru (0-0.5 progress)
+                    const upProgress = jumpProgress;
+                    state.y = originalY - (height * upProgress * (1 - upProgress));
+                } else {
+                    // Fáze dolů (0.5-1 progress)
+                    const downProgress = jumpProgress - 1;
+                    state.y = originalY - (height * (1 - downProgress) * downProgress);
+                }
+                
+                // Animace končetin během skoku
+                const jumpPhase = elapsed * 0.01;
+                state.leftThighAngle = prepLeftThigh + Math.sin(jumpPhase) * 0.6;
+                state.rightThighAngle = prepRightThigh + Math.sin(jumpPhase + Math.PI) * 0.6;
+                state.leftCalfAngle = prepLeftCalf + Math.sin(jumpPhase * 1.2) * 0.4;
+                state.rightCalfAngle = prepRightCalf + Math.sin(jumpPhase * 1.2 + Math.PI) * 0.4;
+                
+                state.leftUpperArmAngle = prepLeftUpperArm + Math.sin(jumpPhase * 0.9) * 0.5;
+                state.rightUpperArmAngle = prepRightUpperArm + Math.sin(jumpPhase * 0.9 + Math.PI) * 0.5;
+                
+                // Radostný výraz
+                state.faceRotation = Math.sin(jumpPhase * 1.5) * 0.1;
+                
+                drawFigure();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(() => performJump(jumpStartTime, originalY, height, duration));
+                } else {
+                    finishJump(originalY);
+                }
+            }
+            
+            function finishJump(originalY) {
+                state.y = originalY;
+                state.isMoving = false;
+                state.currentAnimation = null;
+                
+                // Vrátit auru do normálu
+                if (state.showAura) {
+                    setTimeout(() => updateAuraPosition(), 500);
+                }
+                
+                const points = calculateNormalPoints(state.x, state.y);
+                showBubble(points);
+                updateStatus("Radostný skok dokončen!");
+                
+                returnToDefaultPosition();
+            }
+            
+            prepareJump();
+        }
+
+        // Bezpečná verze skoku
+        function safeJump() {
+            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
+            
+            // Kontrola, zda není příliš na okraji
+            if (state.isOnPlatform && state.currentPlatform) {
+                const edgeThreshold = 50; // Větší okraj pro skok
+                const isTooCloseToEdge = state.x < state.currentPlatform.left + edgeThreshold || 
+                                        state.x > state.currentPlatform.right - FIGURE.HEAD_RADIUS * 2 - edgeThreshold;
+                
+                if (isTooCloseToEdge) {
+                    updateStatus("Příliš na okraji pro skok");
+                    return;
+                }
+            }
+            
+            jump();
         }
 
         function stopAll() {

@@ -185,49 +185,82 @@
             border-radius: 50%;
             pointer-events: none;
             z-index: -1; /* POSUNUTO ZA POSTAVU */
-            mix-blend-mode: overlay;
+            /*mix-blend-mode: overlay;*/
             animation: auraPulse 3s infinite alternate;
             transition: all 0.1s ease-out;
-            opacity: 0.8;
+            opacity: 0.95; /* ZVÝŠENO: Mnohem méně transparentní */
+
+            /* PŘIDÁNO: Vyplněný střed - pozadí bez prázdného středu */
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 255, 150, 0.95) 0%,      /* ZVÝŠENO: 0.7 → 0.95 */
+                rgba(255, 220, 100, 0.85) 80%,     /* ZVÝŠENO: 0.4 → 0.85 */
+                rgba(255, 200, 80, 0.75) 100%      /* ZVÝŠENO: 0.2 → 0.75 */
+            );
         }
-        
+
         @keyframes auraPulse {
             0% {
-                opacity: 0.6;
+                opacity: 0.9; /* ZVÝŠENO: 0.6 → 0.9 */
                 transform: scale(1);
-                box-shadow: 0 0 20px 10px rgba(255, 255, 100, 0.3),
-                            0 0 40px 20px rgba(255, 200, 50, 0.2);
+                box-shadow: 0 0 20px 15px rgba(255, 255, 100, 0.7),  /* ZVÝŠENO: 0.3 → 0.7 */
+                            0 0 40px 25px rgba(255, 200, 50, 0.6);   /* ZVÝŠENO: 0.2 → 0.6 */
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 180, 0.95) 0%,  /* ZVÝŠENO: 0.7 → 0.95 */
+                    rgba(255, 240, 120, 0.85) 100% /* ZVÝŠENO: 0.4 → 0.85 */
+                );
             }
             50% {
-                opacity: 0.8;
+                opacity: 1; /* ZVÝŠENO: 0.8 → 1.0 (zcela neprůhledná) */
                 transform: scale(1.05);
-                box-shadow: 0 0 25px 12px rgba(255, 255, 120, 0.4),
-                            0 0 50px 25px rgba(255, 220, 60, 0.3);
+                box-shadow: 0 0 25px 20px rgba(255, 255, 120, 0.8),  /* ZVÝŠENO: 0.4 → 0.8 */
+                            0 0 50px 35px rgba(255, 220, 60, 0.7);   /* ZVÝŠENO: 0.3 → 0.7 */
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 200, 0.98) 0%,  /* ZVÝŠENO: 0.8 → 0.98 */
+                    rgba(255, 245, 150, 0.9) 100%  /* ZVÝŠENO: 0.5 → 0.9 */
+                );
             }
             100% {
-                opacity: 0.7;
+                opacity: 0.95; /* ZVÝŠENO: 0.7 → 0.95 */
                 transform: scale(1.02);
-                box-shadow: 0 0 22px 11px rgba(255, 255, 110, 0.35),
-                            0 0 45px 22px rgba(255, 210, 55, 0.25);
+                box-shadow: 0 0 22px 18px rgba(255, 255, 110, 0.75), /* ZVÝŠENO: 0.35 → 0.75 */
+                            0 0 45px 30px rgba(255, 210, 55, 0.65);  /* ZVÝŠENO: 0.25 → 0.65 */
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 200, 1.0) 0%,   /* ZVÝŠENO: 0.9 → 1.0 */
+                    rgba(255, 245, 150, 0.95) 100% /* ZVÝŠENO: 0.6 → 0.95 */
+                );
             }
         }
-        
+
         /* Efekt pro aktivitu */
         .aura-active {
             animation: auraActive 0.5s infinite alternate;
         }
-        
+
         @keyframes auraActive {
             0% {
-                box-shadow: 0 0 30px 15px rgba(255, 255, 150, 0.5),
-                            0 0 60px 30px rgba(255, 230, 100, 0.4);
+                box-shadow: 0 0 30px 20px rgba(255, 255, 150, 0.8),  /* ZVÝŠENO: 0.5 → 0.8 */
+                            0 0 60px 40px rgba(255, 230, 100, 0.7);  /* ZVÝŠENO: 0.4 → 0.7 */
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 180, 0.95) 0%,  /* ZVÝŠENO: 0.8 → 0.95 */
+                    rgba(255, 240, 120, 0.85) 100% /* ZVÝŠENO: 0.5 → 0.85 */
+                );
             }
             100% {
-                box-shadow: 0 0 40px 20px rgba(255, 255, 180, 0.6),
-                            0 0 80px 40px rgba(255, 240, 120, 0.5);
+                box-shadow: 0 0 40px 25px rgba(255, 255, 180, 0.9),  /* ZVÝŠENO: 0.6 → 0.9 */
+                            0 0 80px 50px rgba(255, 240, 120, 0.8);  /* ZVÝŠENO: 0.5 → 0.8 */
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 200, 1.0) 0%,   /* ZVÝŠENO: 0.9 → 1.0 */
+                    rgba(255, 245, 150, 0.95) 100% /* ZVÝŠENO: 0.6 → 0.95 */
+                );
             }
         }
-        
+
         /* Container pro panáčka - zůstává fixed */
         .figure-container {
             position: fixed;
@@ -270,6 +303,7 @@
             <button onclick="dance()">Tanec</button>
             <button onclick="wave()">Mávnout</button>
             <button onclick="think()" class="think-btn">Přemýšlím</button>
+            <button onclick="safeJump()" style="background: #2ecc71;">Radostný skok</button>
             <button onclick="stopAll()">Zastavit</button>
             <button onclick="resetPosition()">Reset</button>
             <button onclick="toggleAura()" id="auraToggle" style="background: #f1c40f; color: #333;">Aura: ON</button>
@@ -430,7 +464,11 @@
             
             // Pro kontrolu pozice
             lastValidX: 50,
-            lastValidY: 150
+            lastValidY: 150,
+            
+            // Pro detekci skoku k následujícímu objektu
+            isJumpingToNextObject: false,
+            edgeThreshold: 40 // Nová konstanta: 40px od hrany
         };
 
         // Proměnné pro drag & drop
@@ -566,6 +604,19 @@
             // Nastavit počáteční scroll pozici
             state.scrollX = window.scrollX;
             state.scrollY = window.scrollY;
+
+            // ZMĚNA: Jednoduchý přesun na první objekt
+            const firstObject = document.querySelector('.hm-nav-container');
+            if (firstObject) {
+                setTimeout(() => {
+                    const rect = firstObject.getBoundingClientRect();
+                    state.x = rect.left + 50; // Pozice v objektu
+                    state.y = (rect.top + window.scrollY) - FIGURE.TOTAL_HEIGHT;
+                    drawFigure();
+                    fallToNearestObject(); // Přistane na objektu
+                    updateStatus("Načteno - panáček je na prvním objektu");
+                }, 300);
+            }
         }
 
         function updateCanvasSize() {
@@ -663,8 +714,191 @@
             return closestObject;
         }
 
-        // Funkce pro přistání na objektu
+        // NOVÁ FUNKCE: Najít následující objekt pod aktuálním objektem
+        function findNextObjectBelow() {
+            if (!state.currentPlatform) return null;
+            
+            let nextObject = null;
+            let smallestVerticalGap = Infinity;
+            
+            // Přepočítat pozici panáčka na absolutní (s přičtením scrollu)
+            const absoluteX = state.x;
+            const absoluteY = state.y + window.scrollY;
+            
+            const objects = window.allObjects || [];
+  
+            objects.forEach(object => {
+                // Přeskočit aktuální objekt
+                if (object === state.currentPlatform.element) return;
+                
+                const rect = object.getBoundingClientRect();
+                const objectTop = rect.top + window.scrollY;
+                const objectBottom = rect.bottom + window.scrollY;
+                
+                // Kontrola, zda je objekt pod aktuálním objektem
+                if (objectTop > state.currentPlatform.top + state.currentPlatform.height) {
+                    // Vzdálenost vertikálně od spodní hrany aktuálního objektu
+                    const verticalGap = objectTop - (state.currentPlatform.top + state.currentPlatform.height);
+                    
+                    // Kontrola, zda je panáček horizontálně nad objektem
+                    const horizontalOverlap = absoluteX + FIGURE.HEAD_RADIUS * 2 > rect.left && absoluteX < rect.right;
+                    
+                    if (horizontalOverlap && verticalGap < smallestVerticalGap) {
+                        smallestVerticalGap = verticalGap;
+                        nextObject = {
+                            element: object,
+                            top: objectTop,
+                            left: rect.left,
+                            right: rect.right,
+                            width: rect.width,
+                            height: rect.height,
+                            message: object.getAttribute('data-message') || "Jsem na objektu!"
+                        };
+                    }
+                }
+            });
+
+            /* if no objet has been found return the first */
+            if ( nextObject === null ){
+
+                const rect = objects[0].getBoundingClientRect();
+                const objectTop = rect.top + window.scrollY;
+                const objectBottom = rect.bottom + window.scrollY;
+
+                nextObject = {
+                    element: objects[0],
+                    top: objectTop,
+                    left: rect.left,
+                    right: rect.right,
+                    width: rect.width,
+                    height: rect.height,
+                    message: objects[0].getAttribute('data-message') || "Jsem na objektu!"
+                };
+            }
+            
+            return nextObject;
+        }
+
+        // NOVÁ FUNKCE: Zkontrolovat, zda je panáček blízko spodní hraně aktuálního objektu
+        function isFarTopEdgeOfCurrentPlatform() {
+            if (!state.currentPlatform || !state.isOnPlatform) return false;
+            
+            // Přepočítat pozici panáčka na absolutní (s přičtením scrollu)
+            const absoluteY = state.y + window.scrollY;
+            
+            // Spodní hrana aktuálního objektu
+            //const platformBottom = state.currentPlatform.top + state.currentPlatform.height;
+            const platformTop = state.currentPlatform.top;
+
+            // Vzdálenost od spodní hrany objektu
+            const distanceFromTop = (absoluteY + FIGURE.TOTAL_HEIGHT) - platformTop;
+            
+            // Pokud je vzdálenost menší než práh (40px), pak je panáček blízko spodní hrany
+            return distanceFromTop > state.edgeThreshold;
+        }
+
+        // NOVÁ FUNKCE: Provede plynulý skok na následující objekt
+        function jumpToNextObject(nextObject) {
+            if (!nextObject || state.isJumpingToNextObject) return;
+            
+            state.isJumpingToNextObject = true;
+            state.isMoving = true;
+            
+            // Vypočítat cílovou pozici
+            const targetY = (nextObject.top - window.scrollY) - FIGURE.TOTAL_HEIGHT;
+            
+            // Omezit X pozici, aby byla uvnitř objektu
+            const minX = nextObject.left + 30;
+            const maxX = nextObject.right - FIGURE.HEAD_RADIUS * 2 - 30;
+            let targetX = Math.max(minX, Math.min(state.x, maxX));
+            
+            // Pokud je příliš blízko okraji, posunout více do středu
+            if (targetX < nextObject.left + 40) {
+                targetX = nextObject.left + 40;
+            } else if (targetX > nextObject.right - FIGURE.HEAD_RADIUS * 2 - 40) {
+                targetX = nextObject.right - FIGURE.HEAD_RADIUS * 2 - 40;
+            }
+            
+            const startX = state.x;
+            const startY = state.y;
+            const startTime = Date.now();
+            const jumpDuration = 1000; // 1 sekunda pro plynulý skok
+            
+            // Animace skoku
+            function animateJump() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / jumpDuration, 1);
+                
+                // Easing funkce pro plynulý skok
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                
+                // Horizontální pohyb
+                state.x = startX + (targetX - startX) * easeProgress;
+                
+                // Vertikální pohyb s efektem skoku (parabola)
+                const jumpHeight = 100; // Výška skoku
+                const jumpProgress = progress * 2; // Zrychlený průběh pro skok
+                
+                if (jumpProgress <= 1) {
+                    // Fáze nahoru
+                    const upProgress = jumpProgress;
+                    state.y = startY - (jumpHeight * upProgress * (1 - upProgress));
+                } else {
+                    // Fáze dolů
+                    const downProgress = jumpProgress - 1;
+                    state.y = startY - (jumpHeight * (1 - downProgress) * downProgress) + (targetY - startY) * (downProgress);
+                }
+                
+                // Animace končetin během skoku
+                const jumpPhase = elapsed * 0.01;
+                state.leftThighAngle = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE + Math.sin(jumpPhase) * 0.5;
+                state.rightThighAngle = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE + Math.sin(jumpPhase + Math.PI) * 0.5;
+                state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE + Math.sin(jumpPhase * 1.5) * 0.3;
+                state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE + Math.sin(jumpPhase * 1.5 + Math.PI) * 0.3;
+                
+                state.leftUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE + Math.sin(jumpPhase * 0.8) * 0.4;
+                state.rightUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE + Math.sin(jumpPhase * 0.8 + Math.PI) * 0.4;
+                
+                drawFigure();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateJump);
+                } else {
+                    // Skok dokončen
+                    state.x = targetX;
+                    state.y = targetY;
+                    state.isJumpingToNextObject = false;
+                    state.isMoving = false;
+                    
+                    // Přistání na novém objektu
+                    landOnObject(nextObject);
+                    
+                    // Scrollování k novému objektu
+                    smoothScrollToObject(nextObject.element);
+                }
+            }
+            
+            updateStatus("Skok na další objekt...");
+            animateJump();
+        }
+
+        // NOVÁ FUNKCE: Plynulé scrollování k objektu
+        function smoothScrollToObject(object) {
+            const rect = object.getBoundingClientRect();
+            const targetScrollY = window.scrollY + rect.top - 250; // Scrollovat tak, aby objekt byl 100px od horního okraje
+            
+            // Plynulé scrollování
+            window.scrollTo({
+                top: targetScrollY,
+                behavior: 'smooth'
+            });
+        }
+
+        // UPRAVENÁ FUNKCE: Přistání na objektu s kontrolou skoku
         function landOnObject(object) {
+            // Pokud právě skáčeme na jiný objekt, nedělat nic
+            if (state.isJumpingToNextObject) return;
+            
             state.currentPlatform = object;
             state.isOnPlatform = true;
             
@@ -1104,8 +1338,21 @@
             animateReturn();
         }
 
-        // Funkce pro pád na nejbližší objekt
+        // UPRAVENÁ FUNKCE: Pád na nejbližší objekt s kontrolou skoku na následující objekt
         function fallToNearestObject() {
+
+            // Kontrola, zda je panáček blízko spodní hrany aktuálního objektu
+            if (state.isOnPlatform && isFarTopEdgeOfCurrentPlatform()) {
+                // Najít následující objekt
+                const nextObject = findNextObjectBelow();
+                if (nextObject) {
+                    // Provést skok na následující objekt
+                    jumpToNextObject(nextObject);
+                    return;
+                }
+            }
+            
+            // Pokud není blízko hrany nebo není následující objekt, provést normální pád
             isFallingBack = true;
             
             const closestObject = findClosestObjectBelow();
@@ -1353,7 +1600,7 @@
         }
 
         function startDrag(e) {
-            if (state.isMoving || state.isDragging || isFallingBack) return;
+            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
             
             const figureCenterX = state.x + FIGURE.HEAD_RADIUS;
             const figureCenterY = state.y + FIGURE.HEAD_RADIUS;
@@ -1506,7 +1753,7 @@
                         } else {
                             // Po přesunu provést aktivitu
                             setTimeout(() => {
-                                const activities = ['walk', 'dance', 'wave', 'think'];
+                                const activities = ['walk', 'dance', 'wave', 'think', 'jump'];
                                 const randomActivity = activities[Math.floor(Math.random() * activities.length)];
                                 executeActivity(randomActivity);
                             }, 300);
@@ -1518,7 +1765,7 @@
                 }
             }
             
-            const activities = ['walk', 'dance', 'wave', 'think'];
+            const activities = ['walk', 'dance', 'wave', 'think', 'jump'];
             const randomActivity = activities[Math.floor(Math.random() * activities.length)];
             executeActivity(randomActivity);
         }
@@ -1537,6 +1784,9 @@
                     break;
                 case 'think':
                     safeThink();
+                    break;
+                case 'jump': // NOVÉ: Radostný skok
+                    safeJump();
                     break;
             }
         }
@@ -1920,6 +2170,140 @@
             }
             
             animateThinkUp();
+        }
+
+        // NOVÁ FUNKCE: Radostný skok do výšky
+        function jump() {
+            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
+            
+            state.isMoving = true;
+            state.currentAnimation = 'jump';
+            updateStatus("Radostný skok!");
+            
+            // Zapnout speciální auru pro skok
+            if (state.showAura) {
+                auraOverlay.style.boxShadow = 
+                    `0 0 50px 25px rgba(255, 255, 200, 0.9),
+                    0 0 100px 50px rgba(255, 240, 150, 0.8)`;
+                auraOverlay.style.background = 'radial-gradient(circle, rgba(255,255,220,0.95) 0%, rgba(255,230,120,0.85) 100%)';
+            }
+            
+            const startY = state.y;
+            const jumpHeight = 80; // Výška skoku
+            const jumpDuration = 800; // Doba skoku
+            const startTime = Date.now();
+            
+            // Úhly pro připravenou pozici před skokem
+            const prepLeftThigh = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE - 0.4;
+            const prepRightThigh = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE - 0.4;
+            const prepLeftCalf = -FIGURE.CALF_SPREAD_ANGLE + 0.8;
+            const prepRightCalf = FIGURE.CALF_SPREAD_ANGLE + 0.8;
+            const prepLeftUpperArm = FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE - 0.3;
+            const prepRightUpperArm = FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE - 0.3;
+            
+            // Fáze 1: Příprava na skok (pokrčení)
+            const prepDuration = 200;
+            
+            function prepareJump() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / prepDuration, 1);
+                
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                
+                state.leftThighAngle = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE + (prepLeftThigh - (FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE)) * easeProgress;
+                state.rightThighAngle = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE + (prepRightThigh - (FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE)) * easeProgress;
+                state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE + (prepLeftCalf - (-FIGURE.CALF_SPREAD_ANGLE)) * easeProgress;
+                state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE + (prepRightCalf - FIGURE.CALF_SPREAD_ANGLE) * easeProgress;
+                state.leftUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE + (prepLeftUpperArm - (FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE)) * easeProgress;
+                state.rightUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE + (prepRightUpperArm - (FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE)) * easeProgress;
+                
+                drawFigure();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(prepareJump);
+                } else {
+                    // Fáze 2: Skok
+                    const jumpStartTime = Date.now();
+                    performJump(jumpStartTime, startY, jumpHeight, jumpDuration);
+                }
+            }
+            
+            function performJump(jumpStartTime, originalY, height, duration) {
+                const elapsed = Date.now() - jumpStartTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Parabolický pohyb nahoru a dolů
+                const jumpProgress = progress * 2;
+                
+                if (jumpProgress <= 1) {
+                    // Fáze nahoru (0-0.5 progress)
+                    const upProgress = jumpProgress;
+                    state.y = originalY - (height * upProgress * (1 - upProgress));
+                } else {
+                    // Fáze dolů (0.5-1 progress)
+                    const downProgress = jumpProgress - 1;
+                    state.y = originalY - (height * (1 - downProgress) * downProgress);
+                }
+                
+                // Animace končetin během skoku
+                const jumpPhase = elapsed * 0.01;
+                state.leftThighAngle = prepLeftThigh + Math.sin(jumpPhase) * 0.6;
+                state.rightThighAngle = prepRightThigh + Math.sin(jumpPhase + Math.PI) * 0.6;
+                state.leftCalfAngle = prepLeftCalf + Math.sin(jumpPhase * 1.2) * 0.4;
+                state.rightCalfAngle = prepRightCalf + Math.sin(jumpPhase * 1.2 + Math.PI) * 0.4;
+                
+                state.leftUpperArmAngle = prepLeftUpperArm + Math.sin(jumpPhase * 0.9) * 0.5;
+                state.rightUpperArmAngle = prepRightUpperArm + Math.sin(jumpPhase * 0.9 + Math.PI) * 0.5;
+                
+                // Radostný výraz
+                state.faceRotation = Math.sin(jumpPhase * 1.5) * 0.1;
+                
+                drawFigure();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(() => performJump(jumpStartTime, originalY, height, duration));
+                } else {
+                    finishJump(originalY);
+                }
+            }
+            
+            function finishJump(originalY) {
+                state.y = originalY;
+                state.isMoving = false;
+                state.currentAnimation = null;
+                
+                // Vrátit auru do normálu
+                if (state.showAura) {
+                    setTimeout(() => updateAuraPosition(), 500);
+                }
+                
+                const points = calculateNormalPoints(state.x, state.y);
+                showBubble(points);
+                updateStatus("Radostný skok dokončen!");
+                
+                returnToDefaultPosition();
+            }
+            
+            prepareJump();
+        }
+
+        // Bezpečná verze skoku
+        function safeJump() {
+            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
+            
+            // Kontrola, zda není příliš na okraji
+            if (state.isOnPlatform && state.currentPlatform) {
+                const edgeThreshold = 50; // Větší okraj pro skok
+                const isTooCloseToEdge = state.x < state.currentPlatform.left + edgeThreshold || 
+                                        state.x > state.currentPlatform.right - FIGURE.HEAD_RADIUS * 2 - edgeThreshold;
+                
+                if (isTooCloseToEdge) {
+                    updateStatus("Příliš na okraji pro skok");
+                    return;
+                }
+            }
+            
+            jump();
         }
 
         function stopAll() {
