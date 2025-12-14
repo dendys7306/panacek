@@ -85,7 +85,7 @@
         }
         
         /* Nové třídy pro další objekty */
-        .hm-nav-container, .theiaStickySidebar, .hm-slide-content, .footer-sidebar {
+        .hm-nav-container, .site-content, .footer-sidebar {
             width: 100%;
             height: 200px;
             background: rgba(255, 255, 255, 0.9);
@@ -318,13 +318,7 @@
         <div>Navigační kontejner</div>
     </div>
     
-    <div class="theiaStickySidebar" id="objekt2">
-        <div class="edge-indicator top-edge"></div>
-        <div class="edge-indicator bottom-edge"></div>
-        <div>Sticky sidebar</div>
-    </div>
-    
-    <div class="hm-slide-content" id="objekt3">
+    <div class="site-content" id="objekt3">
         <div class="edge-indicator top-edge"></div>
         <div class="edge-indicator bottom-edge"></div>
         <div>Slide obsah</div>
@@ -489,15 +483,13 @@
         const auraToggle = document.getElementById('auraToggle');
         
         // Seznam tříd pro objekty
-        const objectClasses = ['.hm-nav-container', '.theiaStickySidebar', '.hm-slide-content', '.footer-sidebar', '.flat-platform'];
+        const objectClasses = ['.hm-nav-container', '.site-content', '.footer-sidebar'];
         
         // Texty pro objekty
         const objectMessages = [
-            "První text: Navigační kontejner je skvělý!",
-            "Druhý text: Sticky sidebar drží pozici.",
-            "Třetí text: Slide obsah se posouvá.",
-            "Čtvrtý text: Footer sidebar je dole.",
-            "Platforma: Místo pro odpočinek!"
+            "Karty jako soustava pojmů vyjadřující uspořádání Všehomíra. Potáhni panáčka po stránce, něco ti může povědět!",
+            "Příspěvky - různorodé sestavy a výklady k akutálnímu dění. Что-то и на русском языке можно найти, например что касается подробностей о картах.",
+            "Nějaké základní informace. Ještě ve vývinu, jako mnoho ostatního :) v okolním prostředí."
         ];
 
         // Funkce pro inicializaci zpráv k objektům
@@ -662,11 +654,14 @@
 
         // Funkce pro kontrolu, zda je pozice validní
         function isValidPosition(x, y) {
+            // Přidání tolerance pro floating point chyby
+            const TOLERANCE = 0.5;
+            
             // Kontrola, zda je panáček v rámci viewportu
-            const minX = 10;
-            const maxX = window.innerWidth - FIGURE.HEAD_RADIUS * 2 - 10;
-            const minY = 10;
-            const maxY = window.innerHeight - FIGURE.TOTAL_HEIGHT - 10;
+            const minX = 10 - TOLERANCE; // Malá tolerance
+            const maxX = window.innerWidth - FIGURE.HEAD_RADIUS * 2 - 10 + TOLERANCE;
+            const minY = 10 - TOLERANCE;
+            const maxY = window.innerHeight - FIGURE.TOTAL_HEIGHT - 10 + TOLERANCE;
             
             return x >= minX && x <= maxX && y >= minY && y <= maxY;
         }
