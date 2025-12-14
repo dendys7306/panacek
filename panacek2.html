@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panáček z budoucnosti</title>
+    <title>Panáček z budoucnosti s aurou</title>
     <style>
         * {
             margin: 0;
@@ -14,13 +14,12 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
+            min-height: 200vh; /* Zvýšeno pro testování scrollování */
             padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
-            overflow: auto;
         }
         
         .controls {
@@ -33,6 +32,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             z-index: 100;
             position: relative;
+            touch-action: auto;
         }
         
         .button-row {
@@ -53,6 +53,7 @@
             flex: 1;
             min-width: 80px;
             transition: all 0.3s;
+            touch-action: manipulation;
         }
         
         button:hover {
@@ -76,10 +77,31 @@
             border: 1px solid #e74c3c;
             border-radius: 6px;
             position: relative;
-            margin: 1px auto;
+            margin: 20px auto;
             max-width: 800px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             z-index: 1;
+            touch-action: auto;
+        }
+        
+        /* Nové třídy pro další objekty */
+        .hm-nav-container, .theiaStickySidebar, .hm-slide-content, .footer-sidebar {
+            width: 100%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px dashed #3498db;
+            border-radius: 6px;
+            position: relative;
+            margin: 20px auto;
+            max-width: 800px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1;
+            touch-action: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #666;
         }
         
         .info {
@@ -118,16 +140,16 @@
             bottom: 0;
         }
         
-        /* Styly pro bublinu */
+        /* Styly pro bublinu - ZMĚNĚN FONT NA MENŠÍ */
         .speech-bubble {
-            position: fixed;
+            position: absolute;
             background: white;
             border-radius: 10px;
-            padding: 12px;
+            padding: 10px; /* ZMENŠENO */
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            max-width: 220px;
-            font-size: 12px;
-            line-height: 1.4;
+            max-width: 240px; /* ZVĚTŠENO */
+            font-size: 11px; /* ZMENŠENO Z 12px */
+            line-height: 1.3; /* ZMENŠENO */
             z-index: 10000;
             display: none;
             animation: bubbleAppear 0.3s ease-out;
@@ -156,11 +178,89 @@
                 transform: translateY(0);
             }
         }
+        
+        /* Aura efekt - ZMĚNA: position: absolute v containeru místo fixed */
+        .aura-overlay {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1; /* POSUNUTO ZA POSTAVU */
+            mix-blend-mode: overlay;
+            animation: auraPulse 3s infinite alternate;
+            transition: all 0.1s ease-out;
+            opacity: 0.8;
+        }
+        
+        @keyframes auraPulse {
+            0% {
+                opacity: 0.6;
+                transform: scale(1);
+                box-shadow: 0 0 20px 10px rgba(255, 255, 100, 0.3),
+                            0 0 40px 20px rgba(255, 200, 50, 0.2);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.05);
+                box-shadow: 0 0 25px 12px rgba(255, 255, 120, 0.4),
+                            0 0 50px 25px rgba(255, 220, 60, 0.3);
+            }
+            100% {
+                opacity: 0.7;
+                transform: scale(1.02);
+                box-shadow: 0 0 22px 11px rgba(255, 255, 110, 0.35),
+                            0 0 45px 22px rgba(255, 210, 55, 0.25);
+            }
+        }
+        
+        /* Efekt pro aktivitu */
+        .aura-active {
+            animation: auraActive 0.5s infinite alternate;
+        }
+        
+        @keyframes auraActive {
+            0% {
+                box-shadow: 0 0 30px 15px rgba(255, 255, 150, 0.5),
+                            0 0 60px 30px rgba(255, 230, 100, 0.4);
+            }
+            100% {
+                box-shadow: 0 0 40px 20px rgba(255, 255, 180, 0.6),
+                            0 0 80px 40px rgba(255, 240, 120, 0.5);
+            }
+        }
+        
+        /* Container pro panáčka - zůstává fixed */
+        .figure-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9997;
+        }
+        
+        /* Canvas pro kreslení panáčka */
+        #figureCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1; /* PANÁČEK PŘED AUROU */
+        }
     </style>
 </head>
 <body>
-    <!-- Canvas pro kreslení panáčka - TEN NEMÁ POINTER EVENTS -->
-    <canvas id="figureCanvas" style="position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;"></canvas>
+    <!-- Container pro panáčka s fixed pozicí -->
+    <div class="figure-container">
+        <!-- Aura overlay - nyní ZA canvasem -->
+        <div id="auraOverlay" class="aura-overlay"></div>
+        
+        <!-- Canvas pro kreslení panáčka -->
+        <canvas id="figureCanvas"></canvas>
+        
+        <!-- Bublina -->
+        <div id="speechBubble" class="speech-bubble"></div>
+    </div>
     
     <div class="controls">
         <div class="button-row">
@@ -172,30 +272,66 @@
             <button onclick="think()" class="think-btn">Přemýšlím</button>
             <button onclick="stopAll()">Zastavit</button>
             <button onclick="resetPosition()">Reset</button>
+            <button onclick="toggleAura()" id="auraToggle" style="background: #f1c40f; color: #333;">Aura: ON</button>
         </div>
         <div class="status" id="status">Připraven - panáček se pohybuje po celé obrazovce</div>
     </div>
     
-    <div class="flat-platform" id="platform1" data-message="Jsem první platforma! Zde je bezpečně.">
+    <!-- Nové objekty s různými třídami -->
+    <div class="hm-nav-container" id="objekt1">
         <div class="edge-indicator top-edge"></div>
         <div class="edge-indicator bottom-edge"></div>
+        <div>Navigační kontejner</div>
     </div>
     
-    <br>
-    
-    <div class="flat-platform" id="platform2" data-message="Druhá platforma vítá! Můžeš se projít po mé hraně.">
+    <div class="theiaStickySidebar" id="objekt2">
         <div class="edge-indicator top-edge"></div>
         <div class="edge-indicator bottom-edge"></div>
+        <div>Sticky sidebar</div>
     </div>
     
-    <br>
-    
-    <div class="flat-platform" id="platform3" data-message="Třetí a poslední platforma. Užij si to tady!">
+    <div class="hm-slide-content" id="objekt3">
         <div class="edge-indicator top-edge"></div>
         <div class="edge-indicator bottom-edge"></div>
+        <div>Slide obsah</div>
+    </div>
+    
+    <div class="footer-sidebar" id="objekt4">
+        <div class="edge-indicator top-edge"></div>
+        <div class="edge-indicator bottom-edge"></div>
+        <div>Footer sidebar</div>
+    </div>
+    
+    <!-- Platformy s vlastními zprávami definovanými jako data atributy -->
+    <div class="flat-platform" id="platform1">
+        <div class="edge-indicator top-edge"></div>
+        <div class="edge-indicator bottom-edge"></div>
+        <div style="position: absolute; top: 10px; left: 10px; color: #666;">Platforma 1</div>
+    </div>
+    
+    <div class="flat-platform" id="platform2">
+        <div class="edge-indicator top-edge"></div>
+        <div class="edge-indicator bottom-edge"></div>
+        <div style="position: absolute; top: 10px; left: 10px; color: #666;">Platforma 2</div>
+    </div>
+    
+    <div class="flat-platform" id="platform3">
+        <div class="edge-indicator top-edge"></div>
+        <div class="edge-indicator bottom-edge"></div>
+        <div style="position: absolute; top: 10px; left: 10px; color: #666;">Platforma 3</div>
     </div>
 
-    <div id="info" class="info">Chyť mě myší a táhni - budu vlát jako vlajka!</div>
+    <!-- Přidáno více obsahu pro testování scrollování -->
+    <div style="height: 500px; width: 100%; max-width: 800px; margin: 20px auto; padding: 20px; background: rgba(255,255,255,0.8); border-radius: 8px;">
+        <h2>Testovací obsah pro scrollování</h2>
+        <p>Zkus scrollovat stránku nahoru a dolů. Panáček by měl zůstat na svém místě a držet se s aurou.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+    </div>
+
+    <div id="info" class="info">Chyť mě prstem/myší a táhni - budu vlát jako vlajka!</div>
 
     <script>
         // Konstanty pro přirozenou chůzi - ZVĚTŠENÁ HLAVA
@@ -225,20 +361,24 @@
             FOREARM_SPREAD_ANGLE: Math.PI/45,
             
             COLOR: '#3498db',
-            LINE_WIDTH: 3
+            LINE_WIDTH: 3,
+            
+            // Nové: parametry aury
+            AURA_SIZE_MULTIPLIER: 2.5,
+            AURA_OPACITY: 0.7
         };
 
         // Stav panáčka
         let state = {
-            x: 50,
-            y: 50,
+            x: 50, // Relativní k viewportu
+            y: 150, // Relativní k viewportu
             isMoving: false,
             currentAnimation: null,
             isDragging: false,
             isBeingDragged: false,
             dragOffset: { x: 0, y: 0 },
             
-            // Úhly končetin
+            // Úhly končetin - HADROVÝ EFEKT
             leftThighAngle: FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE,
             leftCalfAngle: -FIGURE.CALF_SPREAD_ANGLE,
             rightThighAngle: FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE,
@@ -249,19 +389,48 @@
             rightUpperArmAngle: FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE,
             rightForearmAngle: FIGURE.FOREARM_SPREAD_ANGLE,
             
-            // Přidáno: rotace obličeje
-            faceRotation: 0, // 0 = rovně, + = doprava, - = doleva
+            // Úhly pro hadrový efekt při tažení
+            dragLeftThighAngle: FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE,
+            dragLeftCalfAngle: -FIGURE.CALF_SPREAD_ANGLE,
+            dragRightThighAngle: FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE,
+            dragRightCalfAngle: FIGURE.CALF_SPREAD_ANGLE,
             
-            // Přidáno: úhly pro hadrový efekt
-            bodyLean: 0, // Naklonění těla
-            bodySway: 0, // Kývání těla
+            dragLeftUpperArmAngle: FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE,
+            dragLeftForearmAngle: -FIGURE.FOREARM_SPREAD_ANGLE,
+            dragRightUpperArmAngle: FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE,
+            dragRightForearmAngle: FIGURE.FOREARM_SPREAD_ANGLE,
+            
+            faceRotation: 0,
+            bodyLean: 0,
+            bodySway: 0,
             
             walkPhase: 0,
             walkDirection: 'right',
             showBubble: false,
-            bubbleText: "Ahoj, já jsem člověk z budoucnosti. Jako pozemšťan, ale z budoucnosti!",
+            bubbleText: "Ahoj, já jsem člověk z budoucnosti. Mám speciální auru!",
             currentPlatform: null,
-            isOnPlatform: false
+            isOnPlatform: false,
+            platformActivities: false,
+            
+            // Nové: stav aury
+            showAura: true,
+            auraActive: false,
+            auraSize: FIGURE.HEAD_RADIUS * FIGURE.AURA_SIZE_MULTIPLIER,
+            
+            // Pro scrollování
+            scrollX: 0,
+            scrollY: 0,
+            
+            // Pro mobilní touch
+            touchIdentifier: null,
+            isTouchDragging: false,
+            touchStartTime: 0,
+            touchStartX: 0,
+            touchStartY: 0,
+            
+            // Pro kontrolu pozice
+            lastValidX: 50,
+            lastValidY: 150
         };
 
         // Proměnné pro drag & drop
@@ -271,40 +440,157 @@
         let dragVelocity = { x: 0, y: 0 };
         let isFallingBack = false;
 
-        // Canvas
+        // Intervaly pro platformové aktivity
+        let platformActivityInterval = null;
+
+        // Canvas a aura elementy
         const canvas = document.getElementById('figureCanvas');
         const ctx = canvas.getContext('2d');
+        const auraOverlay = document.getElementById('auraOverlay');
+        const speechBubble = document.getElementById('speechBubble');
+        const auraToggle = document.getElementById('auraToggle');
         
-        // Vytvoření bubliny
-        const bubble = document.createElement('div');
-        bubble.className = 'speech-bubble';
-        bubble.innerHTML = state.bubbleText;
-        document.body.appendChild(bubble);
+        // Seznam tříd pro objekty
+        const objectClasses = ['.hm-nav-container', '.theiaStickySidebar', '.hm-slide-content', '.footer-sidebar', '.flat-platform'];
+        
+        // Texty pro objekty
+        const objectMessages = [
+            "První text: Navigační kontejner je skvělý!",
+            "Druhý text: Sticky sidebar drží pozici.",
+            "Třetí text: Slide obsah se posouvá.",
+            "Čtvrtý text: Footer sidebar je dole.",
+            "Platforma: Místo pro odpočinek!"
+        ];
 
-        // Najít všechny platformy (divy s třídou flat-platform)
-        const platforms = Array.from(document.querySelectorAll('.flat-platform'));
+        // Funkce pro inicializaci zpráv k objektům
+        function initializeObjectMessages() {
+            console.log("Inicializace zpráv k objektům...");
+            
+            objectClasses.forEach((className, index) => {
+                const objects = document.querySelectorAll(className);
+                
+                objects.forEach((object, objIndex) => {
+                    // Použijeme zprávu z pole podle indexu
+                    const message = objectMessages[index] || `Objekt ${index + 1}: Vítej zde!`;
+                    
+                    // Přidání data-message atributu
+                    object.setAttribute('data-message', message);
+                    
+                    console.log(`Přidána zpráva k ${className} #${objIndex + 1}: "${message}"`);
+                });
+            });
+            
+            // Načtení všech objektů do globální proměnné
+            window.allObjects = [];
+            objectClasses.forEach(className => {
+                const objects = document.querySelectorAll(className);
+                objects.forEach(object => {
+                    window.allObjects.push(object);
+                });
+            });
+            
+            console.log(`Načteno celkem ${window.allObjects.length} objektů.`);
+        }
+
+        // Funkce pro přepínání aury
+        function toggleAura() {
+            state.showAura = !state.showAura;
+            auraToggle.textContent = state.showAura ? 'Aura: ON' : 'Aura: OFF';
+            auraToggle.style.background = state.showAura ? '#f1c40f' : '#95a5a6';
+            
+            if (state.showAura) {
+                updateAuraPosition();
+                auraOverlay.style.display = 'block';
+                updateStatus("Aura zapnuta");
+            } else {
+                auraOverlay.style.display = 'none';
+                updateStatus("Aura vypnuta");
+            }
+        }
+
+        // Funkce pro aktualizaci pozice aury - NYNÍ ZA POSTAVOU
+        function updateAuraPosition() {
+            if (!state.showAura) return;
+            
+            // Vypočítat střed postavy (relativní k viewportu)
+            const headCenterX = state.x + FIGURE.HEAD_RADIUS;
+            const headCenterY = state.y + FIGURE.HEAD_RADIUS;
+            
+            // Pozice aury - střed kolem středu hlavy
+            const auraX = headCenterX - state.auraSize;
+            const auraY = headCenterY - state.auraSize;
+            const auraDiameter = state.auraSize * 2;
+            
+            // Nastavit pozici aury (v containeru s fixed pozicí)
+            auraOverlay.style.left = auraX + 'px';
+            auraOverlay.style.top = auraY + 'px';
+            auraOverlay.style.width = auraDiameter + 'px';
+            auraOverlay.style.height = auraDiameter + 'px';
+            
+            // Dynamicky upravit auru podle aktivity
+            if (state.isMoving || state.isBeingDragged) {
+                auraOverlay.classList.add('aura-active');
+                // Zvýšit intenzitu při pohybu
+                auraOverlay.style.boxShadow = 
+                    `0 0 35px 18px rgba(255, 255, 160, 0.6),
+                     0 0 70px 35px rgba(255, 235, 110, 0.5)`;
+            } else {
+                auraOverlay.classList.remove('aura-active');
+            }
+            
+            // Změnit barvu podle nálady/aktivity
+            if (state.currentAnimation === 'dance') {
+                auraOverlay.style.background = 'radial-gradient(circle, rgba(255,255,200,0.3) 0%, rgba(255,200,255,0.2) 100%)';
+            } else if (state.currentAnimation === 'think') {
+                auraOverlay.style.background = 'radial-gradient(circle, rgba(200,255,255,0.3) 0%, rgba(150,200,255,0.2) 100%)';
+            } else {
+                auraOverlay.style.background = 'radial-gradient(circle, rgba(255,255,180,0.3) 0%, rgba(255,220,100,0.2) 100%)';
+            }
+        }
 
         // Inicializace
         function initialize() {
             updateCanvasSize();
             resetPosition();
             setupEventListeners();
+            
+            // Inicializace zpráv k objektům
+            initializeObjectMessages();
+            
             updateStatus("Panáček se může pohybovat po celé obrazovce");
             drawFigure();
+            
+            // Inicializovat auru
+            updateAuraPosition();
+            
+            // Nastavit počáteční scroll pozici
+            state.scrollX = window.scrollX;
+            state.scrollY = window.scrollY;
         }
 
         function updateCanvasSize() {
-            // Nastavíme canvas na celou velikost okna
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
 
         function resetPosition() {
+            // Reset na pozici relativní k viewportu
             state.x = 50;
-            state.y = 50;
+            state.y = 150;
             state.currentPlatform = null;
             state.isOnPlatform = false;
+            state.platformActivities = false;
             
+            // Uložit validní pozici
+            state.lastValidX = state.x;
+            state.lastValidY = state.y;
+            
+            if (platformActivityInterval) {
+                clearInterval(platformActivityInterval);
+                platformActivityInterval = null;
+            }
+            
+            // Reset úhlů
             state.leftThighAngle = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE;
             state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE;
             state.rightThighAngle = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE;
@@ -319,167 +605,116 @@
             
             hideBubble();
             drawFigure();
+            updateAuraPosition();
             updateStatus("Resetováno - volný pohyb po obrazovce");
         }
 
-        // Funkce pro nalezení nejbližší platformy pod panáčkem
-        function findClosestPlatformBelow(x, y) {
-            let closestPlatform = null;
+        // Funkce pro kontrolu, zda je pozice validní
+        function isValidPosition(x, y) {
+            // Kontrola, zda je panáček v rámci viewportu
+            const minX = 10;
+            const maxX = window.innerWidth - FIGURE.HEAD_RADIUS * 2 - 10;
+            const minY = 10;
+            const maxY = window.innerHeight - FIGURE.TOTAL_HEIGHT - 10;
+            
+            return x >= minX && x <= maxX && y >= minY && y <= maxY;
+        }
+
+        // Funkce pro nalezení nejbližšího objektu pod panáčkem
+        function findClosestObjectBelow() {
+            let closestObject = null;
             let closestDistance = Infinity;
             
-            platforms.forEach(platform => {
-                const rect = platform.getBoundingClientRect();
+            // Přepočítat pozici panáčka na absolutní (s přičtením scrollu)
+            const absoluteX = state.x;
+            const absoluteY = state.y + window.scrollY;
+            
+            // Použít globální proměnnou allObjects
+            const objects = window.allObjects || [];
+            
+            objects.forEach(object => {
+                const rect = object.getBoundingClientRect();
+                const objectTop = rect.top + window.scrollY;
+                const objectBottom = rect.bottom + window.scrollY;
                 
-                // Kontrola, zda je platforma pod panáčkem
-                if (rect.top > y) {
-                    // Vzdálenost vertikálně k horní hraně platformy
-                    const distance = rect.top - y;
+                // Kontrola, zda je objekt pod panáčkem
+                if (objectTop > absoluteY) {
+                    // Vzdálenost vertikálně k horní hraně objektu
+                    const distance = objectTop - absoluteY;
                     
-                    // Kontrola, zda je panáček horizontálně nad platformou
-                    const horizontalOverlap = x + FIGURE.HEAD_RADIUS * 2 > rect.left && x < rect.right;
+                    // Kontrola, zda je panáček horizontálně nad objektem
+                    const horizontalOverlap = absoluteX + FIGURE.HEAD_RADIUS * 2 > rect.left && absoluteX < rect.right;
                     
                     if (horizontalOverlap && distance < closestDistance) {
                         closestDistance = distance;
-                        closestPlatform = {
-                            element: platform,
-                            top: rect.top,
+                        closestObject = {
+                            element: object,
+                            top: objectTop,
                             left: rect.left,
                             right: rect.right,
                             width: rect.width,
-                            message: platform.getAttribute('data-message') || "Jsem na platformě!"
+                            height: rect.height,
+                            message: object.getAttribute('data-message') || "Jsem na objektu!"
                         };
                     }
                 }
             });
             
-            return closestPlatform;
+            return closestObject;
         }
 
-        // Funkce pro přistání na platformě
-        function landOnPlatform(platform) {
-            state.currentPlatform = platform;
+        // Funkce pro přistání na objektu
+        function landOnObject(object) {
+            state.currentPlatform = object;
             state.isOnPlatform = true;
             
-            // Nastavit Y pozici na horní hranu platformy mínus výška postavy
-            state.y = platform.top - FIGURE.TOTAL_HEIGHT;
+            // Nastavit Y pozici na horní hranu objektu mínus výška postavy (relativní k viewportu!)
+            state.y = (object.top - window.scrollY) - FIGURE.TOTAL_HEIGHT;
             
-            // Omezit X pozici, aby byla uvnitř platformy
-            const minX = platform.left + 10;
-            const maxX = platform.right - FIGURE.HEAD_RADIUS * 2 - 10;
-            state.x = Math.max(minX, Math.min(state.x, maxX));
+            // Omezit X pozici, aby byla uvnitř objektu s větším okrajem
+            const minX = object.left + 15;
+            const maxX = object.right - FIGURE.HEAD_RADIUS * 2 - 15;
             
-            // Nastavit text bubliny z atributu data-message platformy
-            state.bubbleText = platform.message;
-            bubble.innerHTML = state.bubbleText;
+            // Zajistit, že panáček není příliš na okraji
+            let targetX = Math.max(minX, Math.min(state.x, maxX));
             
-            // Zobrazit bublinu
+            // Pokud je příliš blízko okraji, posunout více do středu
+            if (targetX < object.left + 30) {
+                targetX = object.left + 30;
+            } else if (targetX > object.right - FIGURE.HEAD_RADIUS * 2 - 30) {
+                targetX = object.right - FIGURE.HEAD_RADIUS * 2 - 30;
+            }
+            
+            state.x = targetX;
+            
+            // Uložit validní pozici
+            state.lastValidX = state.x;
+            state.lastValidY = state.y;
+            
+            // POUŽITÍ ZPRÁVY Z DATA ATRIBUTU
+            const objectMessage = object.element.getAttribute('data-message') || "Jsem na objektu!";
+            state.bubbleText = objectMessage;
+            speechBubble.innerHTML = state.bubbleText;
+            
             const points = calculateNormalPoints(state.x, state.y);
             showBubble(points);
             
-            updateStatus(`Přistál na platformě: ${platform.element.id}`);
+            const objectId = object.element.id || "objekt";
+            updateStatus(`Přistál na objektu: ${objectId}`);
             
-            // Plynulý návrat do normální pozice
             returnToDefaultPosition();
+            startPlatformActivities();
+            
+            // Zvýraznit auru při přistání
+            if (state.showAura) {
+                auraOverlay.style.boxShadow = 
+                    `0 0 50px 25px rgba(255, 255, 200, 0.7),
+                     0 0 100px 50px rgba(255, 240, 150, 0.5)`;
+                setTimeout(() => updateAuraPosition(), 1000);
+            }
         }
 
-        // Výpočet pozic PRO HADROVÝ EFEKT
-        function calculateFloppyPoints(baseX, baseY) {
-            const time = Date.now() * 0.001;
-            
-            // Hlava - základní pozice
-            const headCenterX = baseX + FIGURE.HEAD_RADIUS;
-            const headCenterY = baseY + FIGURE.HEAD_RADIUS;
-            
-            // Tělo - nakloněné podle směru pohybu a kývající se
-            const bodyLean = state.bodyLean; // Naklonění těla (v radiánech)
-            const bodySway = state.bodySway; // Boční kývání
-            
-            // Spodní část těla (boky) - více ovlivněná pohybem
-            const bodyEndX = headCenterX + Math.sin(bodyLean) * FIGURE.BODY_LENGTH * 0.5 + bodySway * 10;
-            const bodyEndY = headCenterY + FIGURE.HEAD_RADIUS + Math.cos(bodyLean) * FIGURE.BODY_LENGTH;
-            
-            // Ramena - mírně ovlivněná nakloněním
-            const shoulderY = headCenterY + FIGURE.HEAD_RADIUS;
-            const shoulderSway = bodySway * 0.5;
-            
-            return {
-                headCenter: { x: headCenterX, y: headCenterY },
-                bodyStart: { x: headCenterX, y: shoulderY },
-                bodyEnd: { x: bodyEndX, y: bodyEndY },
-                
-                // Ramena - ovlivněná nakloněním těla
-                leftShoulder: { 
-                    x: headCenterX - FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway,
-                    y: shoulderY + Math.cos(bodyLean) * 3
-                },
-                rightShoulder: { 
-                    x: headCenterX + FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway,
-                    y: shoulderY + Math.cos(bodyLean) * 3
-                },
-                
-                // Boky - více ovlivněné nakloněním
-                leftHip: { 
-                    x: bodyEndX - FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5,
-                    y: bodyEndY
-                },
-                rightHip: { 
-                    x: bodyEndX + FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5,
-                    y: bodyEndY
-                },
-                
-                // Končetiny - vypočítané z aktuálních úhlů
-                leftElbow: calculateEndpoint(
-                    headCenterX - FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway,
-                    shoulderY + Math.cos(bodyLean) * 3,
-                    FIGURE.UPPER_ARM,
-                    state.leftUpperArmAngle + bodyLean * 0.3
-                ),
-                leftWrist: calculateEndpoint(
-                    headCenterX - FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway + Math.cos(state.leftUpperArmAngle + bodyLean * 0.3) * FIGURE.UPPER_ARM,
-                    shoulderY + Math.cos(bodyLean) * 3 + Math.sin(state.leftUpperArmAngle + bodyLean * 0.3) * FIGURE.UPPER_ARM,
-                    FIGURE.FOREARM,
-                    state.leftUpperArmAngle + state.leftForearmAngle + bodyLean * 0.5
-                ),
-                rightElbow: calculateEndpoint(
-                    headCenterX + FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway,
-                    shoulderY + Math.cos(bodyLean) * 3,
-                    FIGURE.UPPER_ARM,
-                    state.rightUpperArmAngle + bodyLean * 0.3
-                ),
-                rightWrist: calculateEndpoint(
-                    headCenterX + FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway + Math.cos(state.rightUpperArmAngle + bodyLean * 0.3) * FIGURE.UPPER_ARM,
-                    shoulderY + Math.cos(bodyLean) * 3 + Math.sin(state.rightUpperArmAngle + bodyLean * 0.3) * FIGURE.UPPER_ARM,
-                    FIGURE.FOREARM,
-                    state.rightUpperArmAngle + state.rightForearmAngle + bodyLean * 0.5
-                ),
-                leftKnee: calculateEndpoint(
-                    bodyEndX - FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5,
-                    bodyEndY,
-                    FIGURE.THIGH,
-                    state.leftThighAngle + bodyLean * 0.4
-                ),
-                leftAnkle: calculateEndpoint(
-                    bodyEndX - FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5 + Math.cos(state.leftThighAngle + bodyLean * 0.4) * FIGURE.THIGH,
-                    bodyEndY + Math.sin(state.leftThighAngle + bodyLean * 0.4) * FIGURE.THIGH,
-                    FIGURE.CALF,
-                    state.leftThighAngle + state.leftCalfAngle + bodyLean * 0.6
-                ),
-                rightKnee: calculateEndpoint(
-                    bodyEndX + FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5,
-                    bodyEndY,
-                    FIGURE.THIGH,
-                    state.rightThighAngle + bodyLean * 0.4
-                ),
-                rightAnkle: calculateEndpoint(
-                    bodyEndX + FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5 + Math.cos(state.rightThighAngle + bodyLean * 0.4) * FIGURE.THIGH,
-                    bodyEndY + Math.sin(state.rightThighAngle + bodyLean * 0.4) * FIGURE.THIGH,
-                    FIGURE.CALF,
-                    state.rightThighAngle + state.rightCalfAngle + bodyLean * 0.6
-                )
-            };
-        }
-
-        // Původní výpočet pozic pro normální stav
+        // Výpočet pozic pro normální stav
         function calculateNormalPoints(baseX, baseY) {
             const headCenterX = baseX + FIGURE.HEAD_RADIUS;
             const headCenterY = baseY + FIGURE.HEAD_RADIUS;
@@ -550,6 +785,101 @@
             };
         }
 
+        // Výpočet pozic PRO HADROVÝ EFEKT PŘI TAŽENÍ
+        function calculateFloppyPoints(baseX, baseY) {
+            const time = Date.now() * 0.001;
+            
+            // Hlava - základní pozice
+            const headCenterX = baseX + FIGURE.HEAD_RADIUS;
+            const headCenterY = baseY + FIGURE.HEAD_RADIUS;
+            
+            // Tělo - nakloněné podle směru pohybu a kývající se
+            const bodyLean = state.bodyLean;
+            const bodySway = state.bodySway;
+            
+            // Spodní část těla (boky) - více ovlivněná pohybem
+            const bodyEndX = headCenterX + Math.sin(bodyLean) * FIGURE.BODY_LENGTH * 0.5 + bodySway * 10;
+            const bodyEndY = headCenterY + FIGURE.HEAD_RADIUS + Math.cos(bodyLean) * FIGURE.BODY_LENGTH;
+            
+            // Ramena - mírně ovlivněná nakloněním
+            const shoulderY = headCenterY + FIGURE.HEAD_RADIUS;
+            const shoulderSway = bodySway * 0.5;
+            
+            return {
+                headCenter: { x: headCenterX, y: headCenterY },
+                bodyStart: { x: headCenterX, y: shoulderY },
+                bodyEnd: { x: bodyEndX, y: bodyEndY },
+                
+                leftShoulder: { 
+                    x: headCenterX - FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway,
+                    y: shoulderY + Math.cos(bodyLean) * 3
+                },
+                rightShoulder: { 
+                    x: headCenterX + FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway,
+                    y: shoulderY + Math.cos(bodyLean) * 3
+                },
+                
+                leftHip: { 
+                    x: bodyEndX - FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5,
+                    y: bodyEndY
+                },
+                rightHip: { 
+                    x: bodyEndX + FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5,
+                    y: bodyEndY
+                },
+                
+                // Použijeme speciální úhly pro hadrový efekt
+                leftElbow: calculateEndpoint(
+                    headCenterX - FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway,
+                    shoulderY + Math.cos(bodyLean) * 3,
+                    FIGURE.UPPER_ARM,
+                    state.dragLeftUpperArmAngle + bodyLean * 0.3
+                ),
+                leftWrist: calculateEndpoint(
+                    headCenterX - FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway + Math.cos(state.dragLeftUpperArmAngle + bodyLean * 0.3) * FIGURE.UPPER_ARM,
+                    shoulderY + Math.cos(bodyLean) * 3 + Math.sin(state.dragLeftUpperArmAngle + bodyLean * 0.3) * FIGURE.UPPER_ARM,
+                    FIGURE.FOREARM,
+                    state.dragLeftUpperArmAngle + state.dragLeftForearmAngle + bodyLean * 0.5
+                ),
+                rightElbow: calculateEndpoint(
+                    headCenterX + FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway,
+                    shoulderY + Math.cos(bodyLean) * 3,
+                    FIGURE.UPPER_ARM,
+                    state.dragRightUpperArmAngle + bodyLean * 0.3
+                ),
+                rightWrist: calculateEndpoint(
+                    headCenterX + FIGURE.SHOULDER_SPREAD + Math.sin(bodyLean) * 3 + shoulderSway + Math.cos(state.dragRightUpperArmAngle + bodyLean * 0.3) * FIGURE.UPPER_ARM,
+                    shoulderY + Math.cos(bodyLean) * 3 + Math.sin(state.dragRightUpperArmAngle + bodyLean * 0.3) * FIGURE.UPPER_ARM,
+                    FIGURE.FOREARM,
+                    state.dragRightUpperArmAngle + state.dragRightForearmAngle + bodyLean * 0.5
+                ),
+                leftKnee: calculateEndpoint(
+                    bodyEndX - FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5,
+                    bodyEndY,
+                    FIGURE.THIGH,
+                    state.dragLeftThighAngle + bodyLean * 0.4
+                ),
+                leftAnkle: calculateEndpoint(
+                    bodyEndX - FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5 + Math.cos(state.dragLeftThighAngle + bodyLean * 0.4) * FIGURE.THIGH,
+                    bodyEndY + Math.sin(state.dragLeftThighAngle + bodyLean * 0.4) * FIGURE.THIGH,
+                    FIGURE.CALF,
+                    state.dragLeftThighAngle + state.dragLeftCalfAngle + bodyLean * 0.6
+                ),
+                rightKnee: calculateEndpoint(
+                    bodyEndX + FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5,
+                    bodyEndY,
+                    FIGURE.THIGH,
+                    state.dragRightThighAngle + bodyLean * 0.4
+                ),
+                rightAnkle: calculateEndpoint(
+                    bodyEndX + FIGURE.HIP_SPREAD + Math.sin(bodyLean) * 5 + Math.cos(state.dragRightThighAngle + bodyLean * 0.4) * FIGURE.THIGH,
+                    bodyEndY + Math.sin(state.dragRightThighAngle + bodyLean * 0.4) * FIGURE.THIGH,
+                    FIGURE.CALF,
+                    state.dragRightThighAngle + state.dragRightCalfAngle + bodyLean * 0.6
+                )
+            };
+        }
+
         function calculateEndpoint(startX, startY, length, angle) {
             return {
                 x: startX + Math.cos(angle) * length,
@@ -557,9 +887,20 @@
             };
         }
 
-        // Nakreslení panáčka s hadrovým efektem při tažení
+        // Nakreslení panáčka s kontrolou pozice
         function drawFigure() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Kontrola, zda je pozice validní
+            if (!isValidPosition(state.x, state.y)) {
+                console.warn(`Nevalidní pozice: x=${state.x}, y=${state.y}, obnovuji na poslední validní`);
+                state.x = state.lastValidX;
+                state.y = state.lastValidY;
+            } else {
+                // Uložit validní pozici
+                state.lastValidX = state.x;
+                state.lastValidY = state.y;
+            }
             
             const drawX = state.x;
             const drawY = state.y;
@@ -573,7 +914,6 @@
             ctx.lineCap = 'round';
             ctx.strokeStyle = FIGURE.COLOR;
             
-            // Nakreslit panáčka
             drawPanacek(points);
             
             // Červené tečky
@@ -584,7 +924,9 @@
                 ctx.fill();
             });
             
-            // Aktualizace pozice bubliny, pokud je viditelná
+            // Aktualizace aury
+            updateAuraPosition();
+            
             if (state.showBubble) {
                 updateBubblePosition(points);
             }
@@ -597,21 +939,18 @@
             ctx.arc(points.headCenter.x, points.headCenter.y, FIGURE.HEAD_RADIUS, 0, Math.PI * 2);
             ctx.stroke();
             
-            // Uložení stavu canvasu pro rotaci obličeje
             ctx.save();
-            
-            // Posunutí na střed hlavy a rotace podle stavu
             ctx.translate(points.headCenter.x, points.headCenter.y);
             ctx.rotate(state.faceRotation);
             
-            // OČI - s rotací
+            // OČI
             ctx.fillStyle = 'green';
             ctx.beginPath();
-            ctx.arc(-6, -2, 3, 0, Math.PI * 2); // Levé oko
-            ctx.arc(6, -2, 3, 0, Math.PI * 2); // Pravé oko
+            ctx.arc(-6, -2, 3, 0, Math.PI * 2);
+            ctx.arc(6, -2, 3, 0, Math.PI * 2);
             ctx.fill();
             
-            // NOS - čárka (vertikální)
+            // NOS
             ctx.beginPath();
             ctx.moveTo(0, -1);
             ctx.lineTo(0, 4);
@@ -619,17 +958,15 @@
             ctx.lineWidth = 2;
             ctx.stroke();
             
-            // ÚSTA - úsměv (půlkruh)
+            // ÚSTA
             ctx.beginPath();
             ctx.arc(0, 5, 6, 0.2, Math.PI - 0.2);
             ctx.strokeStyle = 'blue';
             ctx.lineWidth = 2;
             ctx.stroke();
             
-            // Obnovení stavu canvasu
             ctx.restore();
             
-            // Obnovení barvy a šířky pro tělo
             ctx.strokeStyle = FIGURE.COLOR;
             ctx.lineWidth = FIGURE.LINE_WIDTH;
             
@@ -656,42 +993,42 @@
             ctx.stroke();
         }
 
-        // Funkce pro aktualizaci hadrového efektu
+        // Funkce pro aktualizaci hadrového efektu při tažení
         function updateFloppyEffect() {
             if (!state.isBeingDragged) return;
             
             const time = Date.now() * 0.001;
             
-            // Aktualizovat rychlost z historie
             if (dragHistory.length > 0) {
                 let avgVelocityX = 0;
+                let avgVelocityY = 0;
                 dragHistory.forEach(point => {
                     avgVelocityX += point.x;
+                    avgVelocityY += point.y;
                 });
                 avgVelocityX /= dragHistory.length;
+                avgVelocityY /= dragHistory.length;
                 
                 // Naklonění těla proti směru pohybu
                 state.bodyLean = -avgVelocityX * 0.3;
-                
-                // Kývání těla (sinusová vlna)
                 state.bodySway = Math.sin(time * 3) * Math.abs(avgVelocityX) * 5;
                 
-                // Vlání končetin
-                const waveIntensity = Math.min(Math.abs(avgVelocityX) * 2, 1.5);
-                const armWave = Math.sin(time * 4) * 0.5 * waveIntensity;
-                const legWave = Math.sin(time * 3.5) * 0.4 * waveIntensity;
+                // Intenzita větru podle rychlosti
+                const windIntensity = Math.min(Math.sqrt(avgVelocityX * avgVelocityX + avgVelocityY * avgVelocityY) * 2, 2);
+                const armWave = Math.sin(time * 4) * 0.7 * windIntensity;
+                const legWave = Math.sin(time * 3.5) * 0.6 * windIntensity;
                 
-                // Levé končetiny
-                state.leftUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE + armWave;
-                state.leftForearmAngle = -FIGURE.FOREARM_SPREAD_ANGLE + armWave * 0.7;
-                state.leftThighAngle = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE + legWave;
-                state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE + legWave * 0.6;
+                // Levé končetiny - hadrový efekt
+                state.dragLeftUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE + armWave;
+                state.dragLeftForearmAngle = -FIGURE.FOREARM_SPREAD_ANGLE + armWave * 0.7;
+                state.dragLeftThighAngle = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE + legWave;
+                state.dragLeftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE + legWave * 0.6;
                 
                 // Pravé končetiny (protifáze)
-                state.rightUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE - armWave;
-                state.rightForearmAngle = FIGURE.FOREARM_SPREAD_ANGLE - armWave * 0.7;
-                state.rightThighAngle = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE - legWave;
-                state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE - legWave * 0.6;
+                state.dragRightUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE - armWave;
+                state.dragRightForearmAngle = FIGURE.FOREARM_SPREAD_ANGLE - armWave * 0.7;
+                state.dragRightThighAngle = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE - legWave;
+                state.dragRightCalfAngle = FIGURE.CALF_SPREAD_ANGLE - legWave * 0.6;
                 
                 // Rotace hlavy mírně proti směru
                 state.faceRotation = -avgVelocityX * 0.1;
@@ -767,27 +1104,35 @@
             animateReturn();
         }
 
-        // Funkce pro pád na nejbližší platformu
-        function fallToNearestPlatform(startX, startY) {
+        // Funkce pro pád na nejbližší objekt
+        function fallToNearestObject() {
             isFallingBack = true;
             
-            // Najít nejbližší platformu pod panáčkem
-            const closestPlatform = findClosestPlatformBelow(startX + FIGURE.HEAD_RADIUS, startY + FIGURE.HEAD_RADIUS);
+            const closestObject = findClosestObjectBelow();
             
             let targetX, targetY;
             
-            if (closestPlatform) {
-                // Přistát na platformě
-                targetY = closestPlatform.top - FIGURE.TOTAL_HEIGHT;
+            if (closestObject) {
+                // Cílová Y pozice je horní hranu objektu mínus výška postavy (relativní k viewportu!)
+                targetY = (closestObject.top - window.scrollY) - FIGURE.TOTAL_HEIGHT;
                 
-                // Omezit X pozici, aby byla uvnitř platformy
-                const minX = closestPlatform.left + 10;
-                const maxX = closestPlatform.right - FIGURE.HEAD_RADIUS * 2 - 10;
-                targetX = Math.max(minX, Math.min(startX, maxX));
+                // Omezit X pozici, aby byla uvnitř objektu s větším okrajem
+                const minX = closestObject.left + 15;
+                const maxX = closestObject.right - FIGURE.HEAD_RADIUS * 2 - 15;
+                
+                // Zajistit, že panáček není příliš na okraji
+                targetX = Math.max(minX, Math.min(state.x, maxX));
+                
+                // Pokud je příliš blízko okraji, posunout více do středu
+                if (targetX < closestObject.left + 30) {
+                    targetX = closestObject.left + 30;
+                } else if (targetX > closestObject.right - FIGURE.HEAD_RADIUS * 2 - 30) {
+                    targetX = closestObject.right - FIGURE.HEAD_RADIUS * 2 - 30;
+                }
             } else {
-                // Žádná platforma není pod panáčkem - zůstat na místě
-                targetX = startX;
-                targetY = startY;
+                // Žádný objekt není pod panáčkem - zůstat na místě, ale zajistit validní pozici
+                targetX = Math.max(10, Math.min(state.x, window.innerWidth - FIGURE.HEAD_RADIUS * 2 - 10));
+                targetY = Math.max(10, Math.min(state.y, window.innerHeight - FIGURE.TOTAL_HEIGHT - 10));
             }
             
             const startTime = Date.now();
@@ -799,13 +1144,10 @@
                 
                 // Easing funkce pro pád
                 const fallProgress = 1 - Math.pow(1 - progress, 2);
-                state.y = startY + (targetY - startY) * fallProgress;
-                state.x = startX + (targetX - startX) * progress;
+                state.y = state.y + (targetY - state.y) * fallProgress;
+                state.x = state.x + (targetX - state.x) * progress;
                 
-                // Končetiny padají dolů s gravitací
                 const gravityEffect = Math.min(progress * 2, 1);
-                
-                // Postupné návraty do normálních pozic
                 state.bodyLean *= (1 - gravityEffect * 0.1);
                 state.bodySway *= (1 - gravityEffect * 0.1);
                 
@@ -814,23 +1156,19 @@
                 if (progress < 1) {
                     requestAnimationFrame(animateFall);
                 } else {
-                    // Dokončení pádu
                     state.x = targetX;
                     state.y = targetY;
                     isFallingBack = false;
                     
-                    // Pokud jsme přistáli na platformě
-                    if (closestPlatform) {
-                        landOnPlatform(closestPlatform);
+                    if (closestObject) {
+                        landOnObject(closestObject);
                     } else {
-                        // Zobrazit bublinu po dopadu
                         setTimeout(() => {
                             const points = calculateNormalPoints(state.x, state.y);
                             showBubble(points);
                             updateStatus("Přistál na volné ploše");
                         }, 300);
                         
-                        // Plynulý návrat do normální pozice
                         setTimeout(() => {
                             returnToDefaultPosition();
                         }, 800);
@@ -841,13 +1179,12 @@
             animateFall();
         }
 
-        // Funkce pro bublinu
+        // Funkce pro bublinu - UPRAVENÁ POZICE (níž k hlavě)
         function showBubble(points) {
             state.showBubble = true;
-            bubble.style.display = 'block';
+            speechBubble.style.display = 'block';
             updateBubblePosition(points);
             
-            // Bublina zmizí po 5 sekundách
             setTimeout(() => {
                 hideBubble();
             }, 5000);
@@ -855,40 +1192,164 @@
         
         function hideBubble() {
             state.showBubble = false;
-            bubble.style.display = 'none';
+            speechBubble.style.display = 'none';
         }
         
         function updateBubblePosition(points) {
             if (!points) return;
             
-            const bubbleWidth = 220;
-            const lines = Math.ceil(bubble.innerText.length / 33);
-            const bubbleHeight = 80 + (lines * 13);
+            const bubbleWidth = 240; // Zvětšeno pro více textu
+            const lines = Math.ceil(speechBubble.innerText.length / 40); // Více znaků na řádek
+            const bubbleHeight = 70 + (lines * 12); // Menší výška řádku
             
+            // Bublina níž k hlavě - posunuta dolů
             let bubbleX = points.headCenter.x - 20;
-            let bubbleY = points.headCenter.y - bubbleHeight;
+            let bubbleY = points.headCenter.y - bubbleHeight + 15; // +15 pro posun níž
             
-            // Omezení, aby bublina nešla mimo okno
             if (bubbleX < 10) bubbleX = 10;
             if (bubbleX + bubbleWidth > window.innerWidth - 10) {
                 bubbleX = window.innerWidth - bubbleWidth - 10;
             }
             
-            bubble.style.left = bubbleX + 'px';
-            bubble.style.top = bubbleY + 'px';
+            // Zajistit, že bublina není příliš nahoře
+            if (bubbleY < 10) {
+                bubbleY = 10;
+            }
+            
+            speechBubble.style.left = bubbleX + 'px';
+            speechBubble.style.top = bubbleY + 'px';
         }
 
-        // Event listeners pro drag & drop s hadrovým efektem
+        // Event listeners pro mobil i desktop
         function setupEventListeners() {
-            // Používáme přímo document pro chytání panáčka
+            // Desktop eventy
             document.addEventListener('mousedown', startDrag);
             document.addEventListener('mousemove', drag);
             document.addEventListener('mouseup', stopDrag);
+            
+            // Mobile touch eventy - UPRAVENÉ
+            document.addEventListener('touchstart', handleTouchStart, { passive: true });
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { passive: true });
+            
+            // Přidáno: event listener pro scrollování
+            window.addEventListener('scroll', handleScroll);
             
             window.addEventListener('resize', () => {
                 updateCanvasSize();
                 drawFigure();
             });
+        }
+
+        // Touch event handlers pro mobil - UPRAVENÉ
+        function handleTouchStart(e) {
+            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
+            
+            const touch = e.touches[0];
+            const mouseEvent = {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            };
+            
+            // Uložit počáteční pozici a čas pro detekci tapnutí vs scrollování
+            state.touchStartTime = Date.now();
+            state.touchStartX = touch.clientX;
+            state.touchStartY = touch.clientY;
+            state.touchIdentifier = touch.identifier;
+            
+            // Pouze detekce tapnutí - drag začne až po pohybu
+            const figureCenterX = state.x + FIGURE.HEAD_RADIUS;
+            const figureCenterY = state.y + FIGURE.HEAD_RADIUS;
+            
+            const distance = Math.sqrt(
+                Math.pow(touch.clientX - figureCenterX, 2) + 
+                Math.pow(touch.clientY - figureCenterY, 2)
+            );
+            
+            if (distance < FIGURE.HEAD_RADIUS * 1.5) {
+                state.isTouchDragging = true;
+                // Nezahájit drag hned, počkat na pohyb v handleTouchMove
+            }
+        }
+        
+        function handleTouchMove(e) {
+            if (!state.isTouchDragging || state.touchIdentifier === null) return;
+            
+            // Najít správný touch podle identifikátoru
+            let touch = null;
+            for (let i = 0; i < e.touches.length; i++) {
+                if (e.touches[i].identifier === state.touchIdentifier) {
+                    touch = e.touches[i];
+                    break;
+                }
+            }
+            
+            if (!touch) return;
+            
+            e.preventDefault(); // Pouze pokud skutečně táhneme panáčka
+            
+            const currentTime = Date.now();
+            const touchDuration = currentTime - state.touchStartTime;
+            const deltaX = Math.abs(touch.clientX - state.touchStartX);
+            const deltaY = Math.abs(touch.clientY - state.touchStartY);
+            
+            // Detekce, zda se jedná o drag (dostatečný pohyb během krátkého času)
+            if (touchDuration > 100 && (deltaX > 10 || deltaY > 10)) {
+                if (!state.isBeingDragged) {
+                    // Zahájit drag
+                    const mouseEvent = {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    };
+                    startDrag(mouseEvent);
+                } else {
+                    // Pokračovat v dragu
+                    const mouseEvent = {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    };
+                    drag(mouseEvent);
+                }
+            }
+        }
+        
+        function handleTouchEnd(e) {
+            if (!state.isTouchDragging) return;
+            
+            // Kontrola, zda končí náš touch
+            let touchEnded = false;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === state.touchIdentifier) {
+                    touchEnded = true;
+                    break;
+                }
+            }
+            
+            if (touchEnded) {
+                if (state.isBeingDragged) {
+                    stopDrag(e);
+                }
+                state.isTouchDragging = false;
+                state.touchIdentifier = null;
+            }
+        }
+
+        // Funkce pro zpracování scrollování
+        function handleScroll() {
+            if (state.isOnPlatform && state.currentPlatform) {
+                const platformTop = state.currentPlatform.top - window.scrollY;
+                state.y = platformTop - FIGURE.TOTAL_HEIGHT;
+                
+                const minX = state.currentPlatform.left + 15;
+                const maxX = state.currentPlatform.right - FIGURE.HEAD_RADIUS * 2 - 15;
+                state.x = Math.max(minX, Math.min(state.x, maxX));
+                
+                // Uložit validní pozici
+                state.lastValidX = state.x;
+                state.lastValidY = state.y;
+            }
+            
+            drawFigure();
         }
 
         function startDrag(e) {
@@ -909,6 +1370,12 @@
                 state.isBeingDragged = true;
                 stopAll();
                 
+                if (platformActivityInterval) {
+                    clearInterval(platformActivityInterval);
+                    platformActivityInterval = null;
+                    state.platformActivities = false;
+                }
+                
                 state.dragOffset.x = e.clientX - state.x;
                 state.dragOffset.y = e.clientY - state.y;
                 
@@ -919,15 +1386,21 @@
                 dragVelocity = { x: 0, y: 0 };
                 
                 // Inicializovat hadrový efekt
+                state.dragLeftThighAngle = state.leftThighAngle;
+                state.dragLeftCalfAngle = state.leftCalfAngle;
+                state.dragRightThighAngle = state.rightThighAngle;
+                state.dragRightCalfAngle = state.rightCalfAngle;
+                state.dragLeftUpperArmAngle = state.leftUpperArmAngle;
+                state.dragLeftForearmAngle = state.leftForearmAngle;
+                state.dragRightUpperArmAngle = state.rightUpperArmAngle;
+                state.dragRightForearmAngle = state.rightForearmAngle;
+                
                 state.bodyLean = 0;
                 state.bodySway = 0;
                 
                 document.getElementById('info').style.display = 'block';
                 updateStatus("Vlaju jako vlajka! Táhni mě...");
-                e.preventDefault();
-                e.stopPropagation();
                 
-                // Spustit animaci hadrového efektu
                 updateFloppyEffect();
             }
         }
@@ -939,18 +1412,15 @@
             const deltaTime = currentTime - lastDragTime;
             
             if (deltaTime > 0) {
-                // Vypočítat rychlost
                 dragVelocity.x = (e.clientX - lastDragPos.x) / deltaTime;
                 dragVelocity.y = (e.clientY - lastDragPos.y) / deltaTime;
                 
-                // Uložit do historie
                 dragHistory.push({
                     x: dragVelocity.x,
                     y: dragVelocity.y,
                     time: currentTime
                 });
                 
-                // Udržovat pouze posledních 5 hodnot
                 if (dragHistory.length > 5) {
                     dragHistory.shift();
                 }
@@ -960,15 +1430,17 @@
             lastDragPos.y = e.clientY;
             lastDragTime = currentTime;
             
-            // Nová pozice - omezení na velikost okna
             let newX = e.clientX - state.dragOffset.x;
             let newY = e.clientY - state.dragOffset.y;
             
             const maxX = window.innerWidth - FIGURE.HEAD_RADIUS * 2 - 10;
             const maxY = window.innerHeight - FIGURE.TOTAL_HEIGHT - 10;
             
+            // Omezit pozici a uložit validní
             state.x = Math.max(10, Math.min(newX, maxX));
             state.y = Math.max(10, Math.min(newY, maxY));
+            state.lastValidX = state.x;
+            state.lastValidY = state.y;
             
             drawFigure();
         }
@@ -979,43 +1451,147 @@
             state.isBeingDragged = false;
             document.getElementById('info').style.display = 'none';
             
-            // Spustit pád na nejbližší platformu
-            fallToNearestPlatform(state.x, state.y);
+            fallToNearestObject();
         }
 
-        // Funkce pro chůzi
-        function walk(direction) {
+        // Funkce pro náhodné aktivity na platformě
+        function startPlatformActivities() {
+            if (platformActivityInterval) {
+                clearInterval(platformActivityInterval);
+            }
+            
+            state.platformActivities = true;
+            
+            setTimeout(() => {
+                performRandomPlatformActivity();
+            }, 1000);
+            
+            platformActivityInterval = setInterval(() => {
+                if (state.isOnPlatform && !state.isMoving && !state.isBeingDragged && !isFallingBack) {
+                    performRandomPlatformActivity();
+                }
+            }, 5000 + Math.random() * 5000);
+        }
+
+        // Funkce pro provedení náhodné aktivity - OPRAVENO PRO OKRAJE
+        function performRandomPlatformActivity() {
+            if (!state.isOnPlatform || state.isMoving || state.isBeingDragged || isFallingBack) {
+                return;
+            }
+            
+            // Kontrola, zda není panáček příliš na okraji
+            if (state.currentPlatform) {
+                const edgeThreshold = 30;
+                const isTooCloseToLeftEdge = state.x < state.currentPlatform.left + edgeThreshold;
+                const isTooCloseToRightEdge = state.x > state.currentPlatform.right - FIGURE.HEAD_RADIUS * 2 - edgeThreshold;
+                
+                if (isTooCloseToLeftEdge || isTooCloseToRightEdge) {
+                    // Posunout více do středu
+                    const middleX = state.currentPlatform.left + (state.currentPlatform.width / 2) - FIGURE.HEAD_RADIUS;
+                    const moveTime = 500;
+                    const startX = state.x;
+                    const startTime = Date.now();
+                    
+                    function moveToCenter() {
+                        const elapsed = Date.now() - startTime;
+                        const progress = Math.min(elapsed / moveTime, 1);
+                        
+                        const easeProgress = 1 - Math.pow(1 - progress, 3);
+                        state.x = startX + (middleX - startX) * easeProgress;
+                        
+                        drawFigure();
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(moveToCenter);
+                        } else {
+                            // Po přesunu provést aktivitu
+                            setTimeout(() => {
+                                const activities = ['walk', 'dance', 'wave', 'think'];
+                                const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+                                executeActivity(randomActivity);
+                            }, 300);
+                        }
+                    }
+                    
+                    moveToCenter();
+                    return;
+                }
+            }
+            
+            const activities = ['walk', 'dance', 'wave', 'think'];
+            const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+            executeActivity(randomActivity);
+        }
+        
+        function executeActivity(activity) {
+            switch(activity) {
+                case 'walk':
+                    const direction = Math.random() > 0.5 ? 'right' : 'left';
+                    safeWalk(direction);
+                    break;
+                case 'dance':
+                    safeDance();
+                    break;
+                case 'wave':
+                    safeWave();
+                    break;
+                case 'think':
+                    safeThink();
+                    break;
+            }
+        }
+
+        // Bezpečná verze walk - kontrola okrajů
+        function safeWalk(direction) {
             if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
             
+            let targetX;
+            const walkDistance = 150; // Méně než původních 200
+            
+            if (state.isOnPlatform && state.currentPlatform) {
+                const platformMaxX = state.currentPlatform.right - FIGURE.HEAD_RADIUS * 2 - 20;
+                const platformMinX = state.currentPlatform.left + 20;
+                
+                if (direction === 'right') {
+                    targetX = Math.min(state.x + walkDistance, platformMaxX);
+                    // Kontrola, zda cíl není příliš blízko okraji
+                    if (targetX > platformMaxX - 30) {
+                        targetX = platformMaxX - 30;
+                    }
+                } else {
+                    targetX = Math.max(state.x - walkDistance, platformMinX);
+                    // Kontrola, zda cíl není příliš blízko okraji
+                    if (targetX < platformMinX + 30) {
+                        targetX = platformMinX + 30;
+                    }
+                }
+            } else {
+                const maxX = window.innerWidth - FIGURE.HEAD_RADIUS * 2 - 20;
+                targetX = direction === 'right' ? 
+                    Math.min(state.x + walkDistance, maxX) : 
+                    Math.max(state.x - walkDistance, 20);
+            }
+            
+            // Spustit chůzi pouze pokud je cílová pozice validní
+            if (isValidPosition(targetX, state.y)) {
+                walkToPosition(direction, targetX);
+            } else {
+                updateStatus("Nelze jít tímto směrem - příliš na okraji");
+            }
+        }
+        
+        function walkToPosition(direction, targetX) {
             state.isMoving = true;
             state.currentAnimation = 'walk';
             state.walkDirection = direction;
             state.walkPhase = 0;
             updateStatus("Chůze " + (direction === 'right' ? 'doprava' : 'doleva'));
             
-            const maxX = window.innerWidth - FIGURE.HEAD_RADIUS * 2 - 20;
-            let targetX;
-            
-            if (state.isOnPlatform && state.currentPlatform) {
-                // Pokud jsme na platformě, omezení na šířku platformy
-                const platformMaxX = state.currentPlatform.right - FIGURE.HEAD_RADIUS * 2 - 10;
-                const platformMinX = state.currentPlatform.left + 10;
-                targetX = direction === 'right' ? 
-                    Math.min(state.x + 200, platformMaxX) : 
-                    Math.max(state.x - 200, platformMinX);
-            } else {
-                // Volný pohyb po obrazovce
-                targetX = direction === 'right' ? 
-                    Math.min(state.x + 200, maxX) : 
-                    Math.max(state.x - 200, 20);
-            }
-            
             const distance = Math.abs(targetX - state.x);
             const duration = distance * 10;
             const startX = state.x;
             const startTime = Date.now();
             
-            // Rotace obličeje podle směru chůze
             const targetFaceRotation = direction === 'right' ? 0.3 : -0.3;
             
             function animateWalk() {
@@ -1028,8 +1604,6 @@
                 const progress = Math.min(elapsed / duration, 1);
                 
                 state.x = startX + (targetX - startX) * progress;
-                
-                // Plynulá rotace obličeje
                 state.faceRotation = targetFaceRotation * progress;
                 
                 const phase = elapsed * 0.008;
@@ -1084,7 +1658,6 @@
                 updateStatus("Chůze dokončena - volný pohyb");
             }
             
-            // Zobraz bublinu
             const points = calculateNormalPoints(state.x, state.y);
             showBubble(points);
             
@@ -1097,6 +1670,12 @@
             if (patrolInterval) clearInterval(patrolInterval);
             stopAll();
             hideBubble();
+            
+            if (platformActivityInterval) {
+                clearInterval(platformActivityInterval);
+                platformActivityInterval = null;
+                state.platformActivities = false;
+            }
             
             if (state.isOnPlatform) {
                 updateStatus("Auto hlídání po platformě");
@@ -1112,23 +1691,21 @@
                 let maxX;
                 
                 if (state.isOnPlatform && state.currentPlatform) {
-                    // Omezení na šířku platformy
-                    maxX = state.currentPlatform.right - FIGURE.HEAD_RADIUS * 2 - 20;
+                    maxX = state.currentPlatform.right - FIGURE.HEAD_RADIUS * 2 - 30; // Větší okraj
                 } else {
-                    // Omezení na šířku okna
-                    maxX = window.innerWidth - FIGURE.HEAD_RADIUS * 2 - 20;
+                    maxX = window.innerWidth - FIGURE.HEAD_RADIUS * 2 - 30; // Větší okraj
                 }
                 
                 if (direction === 'right' && state.x >= maxX - 60) {
                     direction = 'left';
                     updateStatus("Otáčím se doleva...");
-                    setTimeout(() => walk(direction), 800);
+                    setTimeout(() => safeWalk(direction), 800);
                 } else if (direction === 'left' && state.x <= 60) {
                     direction = 'right';
                     updateStatus("Otáčím se doprava...");
-                    setTimeout(() => walk(direction), 800);
+                    setTimeout(() => safeWalk(direction), 800);
                 } else {
-                    walk(direction);
+                    safeWalk(direction);
                 }
             }
             
@@ -1136,10 +1713,35 @@
             patrolInterval = setInterval(patrolStep, 3000);
         }
 
-        // Zbytek funkcí (dance, wave, think, stopAll) zůstává stejný
-        function dance() {
+        function safeDance() {
             if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
             
+            // Kontrola, zda není příliš na okraji
+            if (state.isOnPlatform && state.currentPlatform) {
+                const edgeThreshold = 40;
+                const isTooCloseToEdge = state.x < state.currentPlatform.left + edgeThreshold || 
+                                        state.x > state.currentPlatform.right - FIGURE.HEAD_RADIUS * 2 - edgeThreshold;
+                
+                if (isTooCloseToEdge) {
+                    updateStatus("Příliš na okraji pro tanec");
+                    return;
+                }
+            }
+            
+            dance();
+        }
+
+        function safeWave() {
+            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
+            wave();
+        }
+
+        function safeThink() {
+            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
+            think();
+        }
+
+        function dance() {
             state.isMoving = true;
             state.currentAnimation = 'dance';
             updateStatus("Tanec!");
@@ -1189,13 +1791,19 @@
         }
 
         function wave() {
-            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
-            
             state.isMoving = true;
             state.currentAnimation = 'wave';
             updateStatus("Mávám!");
             
             animateToWavePosition();
+        }
+
+        function think() {
+            state.isMoving = true;
+            state.currentAnimation = 'think';
+            updateStatus("Přemýšlím...");
+            
+            animateToThinkPosition();
         }
 
         function animateToWavePosition() {
@@ -1262,16 +1870,6 @@
             animateWave();
         }
 
-        function think() {
-            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
-            
-            state.isMoving = true;
-            state.currentAnimation = 'think';
-            updateStatus("Přemýšlím...");
-            
-            animateToThinkPosition();
-        }
-
         function animateToThinkPosition() {
             const startAngles = {
                 leftUpperArm: state.leftUpperArmAngle,
@@ -1282,11 +1880,11 @@
             };
             
             const targetAngles = {
-                leftUpperArm: -Math.PI * 1.3, // Nad hlavu
-                leftForearm: -Math.PI * 0.95, // Ohnuté k bradě
-                rightUpperArm: Math.PI * 0.25, // V bok
-                rightForearm: -Math.PI * 1.5, // Ohnuté v lokti
-                faceRotation: -0.1 // Hlava mírně nakloněná
+                leftUpperArm: -Math.PI * 1.3,
+                leftForearm: -Math.PI * 0.95,
+                rightUpperArm: Math.PI * 0.25,
+                rightForearm: -Math.PI * 1.5,
+                faceRotation: -0.1
             };
             
             const thinkTime = 500;
@@ -1330,6 +1928,11 @@
             if (patrolInterval) {
                 clearInterval(patrolInterval);
                 patrolInterval = null;
+            }
+            if (platformActivityInterval) {
+                clearInterval(platformActivityInterval);
+                platformActivityInterval = null;
+                state.platformActivities = false;
             }
             hideBubble();
             updateStatus("Zastaveno");
