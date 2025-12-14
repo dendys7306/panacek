@@ -1,0 +1,8 @@
+        const objectClasses = ['.hm-nav-container', '.site-content', '.footer-sidebar'];
+        
+        // Texty pro objekty
+        const objectMessages = [
+			"Karty jako soustava pojmů vyjadřující uspořádání Všehomíra. Další objekt přes Ctrl+Alt+J.",
+            "Příspěvky - různorodé sestavy a výklady k akutálnímu dění. Что-то и на русском языке можно найти, например что касается подробностей о картах",
+            "Nějaké základní informace. Ještě ve vývinu, jako mnoho ostatního :) v okolním prostředí."
+		];

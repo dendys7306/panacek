@@ -430,7 +430,11 @@
             
             // Pro kontrolu pozice
             lastValidX: 50,
-            lastValidY: 150
+            lastValidY: 150,
+            
+            // Pro detekci skoku k následujícímu objektu
+            isJumpingToNextObject: false,
+            edgeThreshold: 40 // Nová konstanta: 40px od hrany
         };
 
         // Proměnné pro drag & drop
@@ -663,8 +667,191 @@
             return closestObject;
         }
 
-        // Funkce pro přistání na objektu
+        // NOVÁ FUNKCE: Najít následující objekt pod aktuálním objektem
+        function findNextObjectBelow() {
+            if (!state.currentPlatform) return null;
+            
+            let nextObject = null;
+            let smallestVerticalGap = Infinity;
+            
+            // Přepočítat pozici panáčka na absolutní (s přičtením scrollu)
+            const absoluteX = state.x;
+            const absoluteY = state.y + window.scrollY;
+            
+            const objects = window.allObjects || [];
+  
+            objects.forEach(object => {
+                // Přeskočit aktuální objekt
+                if (object === state.currentPlatform.element) return;
+                
+                const rect = object.getBoundingClientRect();
+                const objectTop = rect.top + window.scrollY;
+                const objectBottom = rect.bottom + window.scrollY;
+                
+                // Kontrola, zda je objekt pod aktuálním objektem
+                if (objectTop > state.currentPlatform.top + state.currentPlatform.height) {
+                    // Vzdálenost vertikálně od spodní hrany aktuálního objektu
+                    const verticalGap = objectTop - (state.currentPlatform.top + state.currentPlatform.height);
+                    
+                    // Kontrola, zda je panáček horizontálně nad objektem
+                    const horizontalOverlap = absoluteX + FIGURE.HEAD_RADIUS * 2 > rect.left && absoluteX < rect.right;
+                    
+                    if (horizontalOverlap && verticalGap < smallestVerticalGap) {
+                        smallestVerticalGap = verticalGap;
+                        nextObject = {
+                            element: object,
+                            top: objectTop,
+                            left: rect.left,
+                            right: rect.right,
+                            width: rect.width,
+                            height: rect.height,
+                            message: object.getAttribute('data-message') || "Jsem na objektu!"
+                        };
+                    }
+                }
+            });
+
+            /* if no objet has been found return the first */
+            if ( nextObject === null ){
+
+                const rect = objects[0].getBoundingClientRect();
+                const objectTop = rect.top + window.scrollY;
+                const objectBottom = rect.bottom + window.scrollY;
+
+                nextObject = {
+                    element: objects[0],
+                    top: objectTop,
+                    left: rect.left,
+                    right: rect.right,
+                    width: rect.width,
+                    height: rect.height,
+                    message: objects[0].getAttribute('data-message') || "Jsem na objektu!"
+                };
+            }
+            
+            return nextObject;
+        }
+
+        // NOVÁ FUNKCE: Zkontrolovat, zda je panáček blízko spodní hraně aktuálního objektu
+        function isFarTopEdgeOfCurrentPlatform() {
+            if (!state.currentPlatform || !state.isOnPlatform) return false;
+            
+            // Přepočítat pozici panáčka na absolutní (s přičtením scrollu)
+            const absoluteY = state.y + window.scrollY;
+            
+            // Spodní hrana aktuálního objektu
+            //const platformBottom = state.currentPlatform.top + state.currentPlatform.height;
+            const platformTop = state.currentPlatform.top;
+
+            // Vzdálenost od spodní hrany objektu
+            const distanceFromTop = (absoluteY + FIGURE.TOTAL_HEIGHT) - platformTop;
+            
+            // Pokud je vzdálenost menší než práh (40px), pak je panáček blízko spodní hrany
+            return distanceFromTop > state.edgeThreshold;
+        }
+
+        // NOVÁ FUNKCE: Provede plynulý skok na následující objekt
+        function jumpToNextObject(nextObject) {
+            if (!nextObject || state.isJumpingToNextObject) return;
+            
+            state.isJumpingToNextObject = true;
+            state.isMoving = true;
+            
+            // Vypočítat cílovou pozici
+            const targetY = (nextObject.top - window.scrollY) - FIGURE.TOTAL_HEIGHT;
+            
+            // Omezit X pozici, aby byla uvnitř objektu
+            const minX = nextObject.left + 30;
+            const maxX = nextObject.right - FIGURE.HEAD_RADIUS * 2 - 30;
+            let targetX = Math.max(minX, Math.min(state.x, maxX));
+            
+            // Pokud je příliš blízko okraji, posunout více do středu
+            if (targetX < nextObject.left + 40) {
+                targetX = nextObject.left + 40;
+            } else if (targetX > nextObject.right - FIGURE.HEAD_RADIUS * 2 - 40) {
+                targetX = nextObject.right - FIGURE.HEAD_RADIUS * 2 - 40;
+            }
+            
+            const startX = state.x;
+            const startY = state.y;
+            const startTime = Date.now();
+            const jumpDuration = 1000; // 1 sekunda pro plynulý skok
+            
+            // Animace skoku
+            function animateJump() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / jumpDuration, 1);
+                
+                // Easing funkce pro plynulý skok
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                
+                // Horizontální pohyb
+                state.x = startX + (targetX - startX) * easeProgress;
+                
+                // Vertikální pohyb s efektem skoku (parabola)
+                const jumpHeight = 100; // Výška skoku
+                const jumpProgress = progress * 2; // Zrychlený průběh pro skok
+                
+                if (jumpProgress <= 1) {
+                    // Fáze nahoru
+                    const upProgress = jumpProgress;
+                    state.y = startY - (jumpHeight * upProgress * (1 - upProgress));
+                } else {
+                    // Fáze dolů
+                    const downProgress = jumpProgress - 1;
+                    state.y = startY - (jumpHeight * (1 - downProgress) * downProgress) + (targetY - startY) * (downProgress);
+                }
+                
+                // Animace končetin během skoku
+                const jumpPhase = elapsed * 0.01;
+                state.leftThighAngle = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE + Math.sin(jumpPhase) * 0.5;
+                state.rightThighAngle = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE + Math.sin(jumpPhase + Math.PI) * 0.5;
+                state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE + Math.sin(jumpPhase * 1.5) * 0.3;
+                state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE + Math.sin(jumpPhase * 1.5 + Math.PI) * 0.3;
+                
+                state.leftUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE + Math.sin(jumpPhase * 0.8) * 0.4;
+                state.rightUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE + Math.sin(jumpPhase * 0.8 + Math.PI) * 0.4;
+                
+                drawFigure();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateJump);
+                } else {
+                    // Skok dokončen
+                    state.x = targetX;
+                    state.y = targetY;
+                    state.isJumpingToNextObject = false;
+                    state.isMoving = false;
+                    
+                    // Přistání na novém objektu
+                    landOnObject(nextObject);
+                    
+                    // Scrollování k novému objektu
+                    smoothScrollToObject(nextObject.element);
+                }
+            }
+            
+            updateStatus("Skok na další objekt...");
+            animateJump();
+        }
+
+        // NOVÁ FUNKCE: Plynulé scrollování k objektu
+        function smoothScrollToObject(object) {
+            const rect = object.getBoundingClientRect();
+            const targetScrollY = window.scrollY + rect.top - 250; // Scrollovat tak, aby objekt byl 100px od horního okraje
+            
+            // Plynulé scrollování
+            window.scrollTo({
+                top: targetScrollY,
+                behavior: 'smooth'
+            });
+        }
+
+        // UPRAVENÁ FUNKCE: Přistání na objektu s kontrolou skoku
         function landOnObject(object) {
+            // Pokud právě skáčeme na jiný objekt, nedělat nic
+            if (state.isJumpingToNextObject) return;
+            
             state.currentPlatform = object;
             state.isOnPlatform = true;
             
@@ -1104,8 +1291,21 @@
             animateReturn();
         }
 
-        // Funkce pro pád na nejbližší objekt
+        // UPRAVENÁ FUNKCE: Pád na nejbližší objekt s kontrolou skoku na následující objekt
         function fallToNearestObject() {
+
+            // Kontrola, zda je panáček blízko spodní hrany aktuálního objektu
+            if (state.isOnPlatform && isFarTopEdgeOfCurrentPlatform()) {
+                // Najít následující objekt
+                const nextObject = findNextObjectBelow();
+                if (nextObject) {
+                    // Provést skok na následující objekt
+                    jumpToNextObject(nextObject);
+                    return;
+                }
+            }
+            
+            // Pokud není blízko hrany nebo není následující objekt, provést normální pád
             isFallingBack = true;
             
             const closestObject = findClosestObjectBelow();
@@ -1353,7 +1553,7 @@
         }
 
         function startDrag(e) {
-            if (state.isMoving || state.isDragging || isFallingBack) return;
+            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack) return;
             
             const figureCenterX = state.x + FIGURE.HEAD_RADIUS;
             const figureCenterY = state.y + FIGURE.HEAD_RADIUS;
