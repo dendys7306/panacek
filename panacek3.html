@@ -185,49 +185,82 @@
             border-radius: 50%;
             pointer-events: none;
             z-index: -1; /* POSUNUTO ZA POSTAVU */
-            mix-blend-mode: overlay;
+            /*mix-blend-mode: overlay;*/
             animation: auraPulse 3s infinite alternate;
             transition: all 0.1s ease-out;
-            opacity: 0.8;
+            opacity: 0.95; /* ZVÝŠENO: Mnohem méně transparentní */
+
+            /* PŘIDÁNO: Vyplněný střed - pozadí bez prázdného středu */
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 255, 150, 0.95) 0%,      /* ZVÝŠENO: 0.7 → 0.95 */
+                rgba(255, 220, 100, 0.85) 80%,     /* ZVÝŠENO: 0.4 → 0.85 */
+                rgba(255, 200, 80, 0.75) 100%      /* ZVÝŠENO: 0.2 → 0.75 */
+            );
         }
-        
+
         @keyframes auraPulse {
             0% {
-                opacity: 0.6;
+                opacity: 0.9; /* ZVÝŠENO: 0.6 → 0.9 */
                 transform: scale(1);
-                box-shadow: 0 0 20px 10px rgba(255, 255, 100, 0.3),
-                            0 0 40px 20px rgba(255, 200, 50, 0.2);
+                box-shadow: 0 0 20px 15px rgba(255, 255, 100, 0.7),  /* ZVÝŠENO: 0.3 → 0.7 */
+                            0 0 40px 25px rgba(255, 200, 50, 0.6);   /* ZVÝŠENO: 0.2 → 0.6 */
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 180, 0.95) 0%,  /* ZVÝŠENO: 0.7 → 0.95 */
+                    rgba(255, 240, 120, 0.85) 100% /* ZVÝŠENO: 0.4 → 0.85 */
+                );
             }
             50% {
-                opacity: 0.8;
+                opacity: 1; /* ZVÝŠENO: 0.8 → 1.0 (zcela neprůhledná) */
                 transform: scale(1.05);
-                box-shadow: 0 0 25px 12px rgba(255, 255, 120, 0.4),
-                            0 0 50px 25px rgba(255, 220, 60, 0.3);
+                box-shadow: 0 0 25px 20px rgba(255, 255, 120, 0.8),  /* ZVÝŠENO: 0.4 → 0.8 */
+                            0 0 50px 35px rgba(255, 220, 60, 0.7);   /* ZVÝŠENO: 0.3 → 0.7 */
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 200, 0.98) 0%,  /* ZVÝŠENO: 0.8 → 0.98 */
+                    rgba(255, 245, 150, 0.9) 100%  /* ZVÝŠENO: 0.5 → 0.9 */
+                );
             }
             100% {
-                opacity: 0.7;
+                opacity: 0.95; /* ZVÝŠENO: 0.7 → 0.95 */
                 transform: scale(1.02);
-                box-shadow: 0 0 22px 11px rgba(255, 255, 110, 0.35),
-                            0 0 45px 22px rgba(255, 210, 55, 0.25);
+                box-shadow: 0 0 22px 18px rgba(255, 255, 110, 0.75), /* ZVÝŠENO: 0.35 → 0.75 */
+                            0 0 45px 30px rgba(255, 210, 55, 0.65);  /* ZVÝŠENO: 0.25 → 0.65 */
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 200, 1.0) 0%,   /* ZVÝŠENO: 0.9 → 1.0 */
+                    rgba(255, 245, 150, 0.95) 100% /* ZVÝŠENO: 0.6 → 0.95 */
+                );
             }
         }
-        
+
         /* Efekt pro aktivitu */
         .aura-active {
             animation: auraActive 0.5s infinite alternate;
         }
-        
+
         @keyframes auraActive {
             0% {
-                box-shadow: 0 0 30px 15px rgba(255, 255, 150, 0.5),
-                            0 0 60px 30px rgba(255, 230, 100, 0.4);
+                box-shadow: 0 0 30px 20px rgba(255, 255, 150, 0.8),  /* ZVÝŠENO: 0.5 → 0.8 */
+                            0 0 60px 40px rgba(255, 230, 100, 0.7);  /* ZVÝŠENO: 0.4 → 0.7 */
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 180, 0.95) 0%,  /* ZVÝŠENO: 0.8 → 0.95 */
+                    rgba(255, 240, 120, 0.85) 100% /* ZVÝŠENO: 0.5 → 0.85 */
+                );
             }
             100% {
-                box-shadow: 0 0 40px 20px rgba(255, 255, 180, 0.6),
-                            0 0 80px 40px rgba(255, 240, 120, 0.5);
+                box-shadow: 0 0 40px 25px rgba(255, 255, 180, 0.9),  /* ZVÝŠENO: 0.6 → 0.9 */
+                            0 0 80px 50px rgba(255, 240, 120, 0.8);  /* ZVÝŠENO: 0.5 → 0.8 */
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 200, 1.0) 0%,   /* ZVÝŠENO: 0.9 → 1.0 */
+                    rgba(255, 245, 150, 0.95) 100% /* ZVÝŠENO: 0.6 → 0.95 */
+                );
             }
         }
-        
+
         /* Container pro panáčka - zůstává fixed */
         .figure-container {
             position: fixed;
@@ -570,6 +603,19 @@
             // Nastavit počáteční scroll pozici
             state.scrollX = window.scrollX;
             state.scrollY = window.scrollY;
+
+            // ZMĚNA: Jednoduchý přesun na první objekt
+            const firstObject = document.querySelector('.hm-nav-container');
+            if (firstObject) {
+                setTimeout(() => {
+                    const rect = firstObject.getBoundingClientRect();
+                    state.x = rect.left + 50; // Pozice v objektu
+                    state.y = (rect.top + window.scrollY) - FIGURE.TOTAL_HEIGHT;
+                    drawFigure();
+                    fallToNearestObject(); // Přistane na objektu
+                    updateStatus("Načteno - panáček je na prvním objektu");
+                }, 300);
+            }
         }
 
         function updateCanvasSize() {
