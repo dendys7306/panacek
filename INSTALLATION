@@ -1,0 +1,29 @@
+
+
+html elementy upraveny v hitmag šabloně v souboru header.php
+za body přidáno
+
+<body <?php body_class(); ?>>
+	
+	<!-- Container pro panáčka s fixed pozicí -->
+	<div class="figure-container">
+		<!-- Canvas pro kreslení panáčka -->
+		<canvas id="figureCanvas" style="position: absolute; top: 0; left: 0; pointer-events: none;"></canvas>
+
+		<!-- Aura overlay -->
+		<div id="auraOverlay" class="aura-overlay"></div>
+
+		<!-- Bublina -->
+		<div id="speechBubble" class="speech-bubble"></div>
+	</div>
+	
+<div class="status" id="status" hidden>Připraven - panáček se pohybuje po celé obrazovce</div>
+<div id="info" class="info" hidden>Chyť mě myší a táhni - budu vlát jako vlajka!</div>  
+
+
+
+do wordpressu zkopírovat styly zvlášt a javasctipt zvlášť
+
+Třeba provést nějaké komenty ve stylech
+
+Upravit vždy texty v javascriptu pro data-messages
