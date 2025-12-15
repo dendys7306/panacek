@@ -304,6 +304,7 @@
             <button onclick="wave()">Mávnout</button>
             <button onclick="think()" class="think-btn">Přemýšlím</button>
             <button onclick="safeJump()" style="background: #2ecc71;">Radostný skok</button>
+            <button onclick="safeSit()" style="background: #e67e22;">Sednout si</button>
             <button onclick="stopAll()">Zastavit</button>
             <button onclick="resetPosition()">Reset</button>
             <button onclick="toggleAura()" id="auraToggle" style="background: #f1c40f; color: #333;">Aura: ON</button>
@@ -487,7 +488,7 @@
         
         // Texty pro objekty
         const objectMessages = [
-            "Karty jako soustava pojmů vyjadřující uspořádání Všehomíra. Potáhni panáčka po stránce, něco ti může povědět.!",
+            "Karty jako soustava pojmů vyjadřující uspořádání Všehomíra. Potáhni panáčka po stránce, něco ti může povědět!",
             "Příspěvky - různorodé sestavy a výklady k akutálnímu dění. Что-то и на русском языке можно найти, например что касается подробностей о картах.",
             "Nějaké základní informace. Ještě ve vývinu, jako mnoho ostatního :) v okolním prostředí."
         ];
@@ -573,7 +574,11 @@
                 auraOverlay.style.background = 'radial-gradient(circle, rgba(255,255,200,0.3) 0%, rgba(255,200,255,0.2) 100%)';
             } else if (state.currentAnimation === 'think') {
                 auraOverlay.style.background = 'radial-gradient(circle, rgba(200,255,255,0.3) 0%, rgba(150,200,255,0.2) 100%)';
-            } else {
+            } else if (state.currentAnimation === 'jump') {
+                auraOverlay.style.background = 'radial-gradient(circle, rgba(255,255,220,0.4) 0%, rgba(255,230,120,0.3) 100%)';
+            } else if (state.currentAnimation === 'sit') {
+                auraOverlay.style.background = 'radial-gradient(circle, rgba(200,220,255,0.5) 0%, rgba(180,200,240,0.4) 100%)';
+            } else {            
                 auraOverlay.style.background = 'radial-gradient(circle, rgba(255,255,180,0.3) 0%, rgba(255,220,100,0.2) 100%)';
             }
         }
@@ -1748,7 +1753,7 @@
                         } else {
                             // Po přesunu provést aktivitu
                             setTimeout(() => {
-                                const activities = ['walk', 'dance', 'wave', 'think', 'jump'];
+                                const activities = ['walk', 'dance', 'wave', 'think', 'jump', 'sit'];
                                 const randomActivity = activities[Math.floor(Math.random() * activities.length)];
                                 executeActivity(randomActivity);
                             }, 300);
@@ -1760,7 +1765,7 @@
                 }
             }
             
-            const activities = ['walk', 'dance', 'wave', 'think', 'jump'];
+            const activities = ['walk', 'dance', 'wave', 'think', 'jump', 'sit'];
             const randomActivity = activities[Math.floor(Math.random() * activities.length)];
             executeActivity(randomActivity);
         }
@@ -1782,6 +1787,9 @@
                     break;
                 case 'jump': // NOVÉ: Radostný skok
                     safeJump();
+                    break;
+                case 'sit': // NOVÉ: sezeni
+                    safeSit();
                     break;
             }
         }
@@ -2300,6 +2308,433 @@
             
             jump();
         }
+
+        // NOVÁ FUNKCE: Panáček si sedne na hranu objektu - UPRAVENO S POMALOU CHŮZÍ A NÁVRATEM
+        function sitOnEdge() {
+            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack || !state.isOnPlatform) return;
+            
+            // Kontrola, zda je dostatek místa na okraji
+            const platform = state.currentPlatform;
+            if (!platform) return;
+            
+            // Vybrat nejbližší hranu (levou nebo pravou)
+            const distanceToLeftEdge = state.x - platform.left;
+            const distanceToRightEdge = platform.right - (state.x + FIGURE.HEAD_RADIUS * 2);
+            const sitOnLeftEdge = distanceToLeftEdge < distanceToRightEdge;
+            
+            // Výpočet pozice pro sezení
+            const targetEdgeX = sitOnLeftEdge ? 
+                platform.left + 15 : // Sedne blíže k levému okraji
+                platform.right - FIGURE.HEAD_RADIUS * 2 - 15; // Sedne blíže k pravému okraji
+            
+            state.isMoving = true;
+            state.currentAnimation = 'sit';
+            updateStatus(sitOnLeftEdge ? "Jdu si sednout na levou hranu..." : "Jdu si sednout na pravou hranu...");
+            
+            // Uložit původní pozici pro návrat
+            const originalX = state.x;
+            const originalY = state.y;
+            
+            // Speciální aura pro sezení
+            if (state.showAura) {
+                auraOverlay.style.boxShadow = 
+                    `0 0 40px 20px rgba(200, 220, 255, 0.7),
+                    0 0 80px 40px rgba(180, 200, 240, 0.5)`;
+                auraOverlay.style.background = 'radial-gradient(circle, rgba(200,220,255,0.4) 0%, rgba(180,200,240,0.3) 100%)';
+            }
+            
+            const startX = state.x;
+            const startY = state.y;
+            const walkDistance = Math.abs(targetEdgeX - startX);
+            const moveDuration = walkDistance * 30; // ZPOMALENO: dříve bylo *10, teď *30
+            const startTime = Date.now();
+
+            // Úhly pro sezení
+            const sitLeftThigh = Math.PI * 0.4; // Nohy pokrčené
+            const sitRightThigh = Math.PI * 0.4;
+            const sitLeftCalf = -Math.PI * 0.3;
+            const sitRightCalf = -Math.PI * 0.3;
+            const sitLeftUpperArm = Math.PI * 0.7; // Paže pro oporu
+            const sitRightUpperArm = Math.PI * 0.7;
+            const sitLeftForearm = -Math.PI * 0.2;
+            const sitRightForearm = -Math.PI * 0.2;
+            
+            // Směr chůze
+            const direction = sitOnLeftEdge ? 'left' : 'right';
+            
+            // Fáze 1: POMALÁ CHŮZE K HRANĚ
+            function walkToEdge() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / moveDuration, 1);
+                
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                state.x = startX + (targetEdgeX - startX) * easeProgress;
+                
+                // POMALÁ PŘIROZENÁ ANIMACE CHŮZE SE SPRÁVNOU NOHOU VPŘEDU
+                const phase = elapsed * 0.008; // ZPOMALENO: dříve 0.015
+                const leftLegForward = Math.sin(phase);
+                const rightLegForward = Math.sin(phase + Math.PI);
+                
+                if (direction === 'left') {
+                    // POMALÁ CHŮZE DOLEVA - LEVÁ NOHA VPŘEDU
+                    state.leftThighAngle = (FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE) + leftLegForward * 0.5; // ZMĚNĚNO: 0.7 → 0.5
+                    state.rightThighAngle = (FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE) + rightLegForward * 0.5;
+                    state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE - (leftLegForward > 0 ? leftLegForward * 0.6 : 0.2); // ZMĚNĚNO: 0.8 → 0.6
+                    state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE - (rightLegForward > 0 ? rightLegForward * 0.6 : 0.2);
+                    
+                    // PAŽE V PROTIFÁZI - PRAVÁ PAŽE VPŘEDU PŘI CHŮZI DOLEVA
+                    state.leftUpperArmAngle = (FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE) + rightLegForward * 0.4; // ZMĚNĚNO: 0.6 → 0.4
+                    state.rightUpperArmAngle = (FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE) + leftLegForward * 0.4;
+                    state.leftForearmAngle = FIGURE.FOREARM_SPREAD_ANGLE - rightLegForward * 0.15; // ZMĚNĚNO: 0.2 → 0.15
+                    state.rightForearmAngle = FIGURE.FOREARM_SPREAD_ANGLE - leftLegForward * 0.15;
+                    
+                    // HLAVA MÍRNĚ NAKLONĚNA DO SMĚRU CHŮZE
+                    state.faceRotation = -0.15 * progress; // ZMĚNĚNO: 0.2 → 0.15
+                    
+                } else {
+                    // POMALÁ CHŮZE DOPRAVA - PRAVÁ NOHA VPŘEDU
+                    state.leftThighAngle = (FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE) - leftLegForward * 0.5;
+                    state.rightThighAngle = (FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE) - rightLegForward * 0.5;
+                    state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE + (leftLegForward > 0 ? leftLegForward * 0.6 : 0.2);
+                    state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE + (rightLegForward > 0 ? rightLegForward * 0.6 : 0.2);
+                    
+                    // PAŽE V PROTIFÁZI - LEVÁ PAŽE VPŘEDU PŘI CHŮZI DOPRAVA
+                    state.leftUpperArmAngle = (FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE) + leftLegForward * 0.4;
+                    state.rightUpperArmAngle = (FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE) + rightLegForward * 0.4;
+                    state.leftForearmAngle = -FIGURE.FOREARM_SPREAD_ANGLE + leftLegForward * 0.08; // ZMĚNĚNO: 0.1 → 0.08
+                    state.rightForearmAngle = -FIGURE.FOREARM_SPREAD_ANGLE + rightLegForward * 0.08;
+                    
+                    // HLAVA MÍRNĚ NAKLONĚNA DO SMĚRU CHŮZE
+                    state.faceRotation = 0.15 * progress;
+                }
+                
+                drawFigure();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(walkToEdge);
+                } else {
+                    // Fáze 2: ZASTAVENÍ SE PŘED SEZENÍM
+                    stopBeforeSit(sitOnLeftEdge, targetEdgeX, originalX, originalY);
+                }
+            }
+            
+            function stopBeforeSit(sitOnLeft, edgeX, originalX, originalY) {
+                const stopStartTime = Date.now();
+                const stopDuration = 500; // ZVÝŠENO: dříve 300 → 500
+                
+                // ZÁVĚREČNÉ DOKROČENÍ - DOPLNĚNÍ POSLEDNÍHO KROKU
+                function animateStop() {
+                    const elapsed = Date.now() - stopStartTime;
+                    const progress = Math.min(elapsed / stopDuration, 1);
+                    
+                    // DOKONČENÍ POSLEDNÍHO KROKU
+                    const finalPhase = elapsed * 0.015; // ZPOMALENO: dříve 0.02 → 0.015
+                    
+                    if (sitOnLeft) {
+                        // DOKROČENÍ LEVOU NOHOU NA LEVÉ HRANĚ
+                        state.leftThighAngle = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE - Math.sin(finalPhase) * 0.3; // ZMĚNĚNO: 0.4 → 0.3
+                        state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE + Math.sin(finalPhase * 1.2) * 0.2; // ZMĚNĚNO: 0.3 → 0.2
+                    } else {
+                        // DOKROČENÍ PRAVOU NOHOU NA PRAVÉ HRANĚ
+                        state.rightThighAngle = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE - Math.sin(finalPhase) * 0.3;
+                        state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE + Math.sin(finalPhase * 1.2) * 0.2;
+                    }
+                    
+                    // PAŽE SE SPUSTÍ DOLŮ PŘÍPRAVOU NA SEZENÍ
+                    state.leftUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE - 0.08 * progress; // ZMĚNĚNO: 0.1 → 0.08
+                    state.rightUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE - 0.08 * progress;
+                    
+                    // HLAVA SE NAROVNÁ
+                    state.faceRotation *= 0.95;
+                    
+                    drawFigure();
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animateStop);
+                    } else {
+                        // Fáze 3: Příprava na sezení
+                        prepareForSit(sitOnLeft, edgeX, originalX, originalY);
+                    }
+                }
+                
+                animateStop();
+            }
+            
+            function prepareForSit(sitOnLeft, edgeX, originalX, originalY) {
+                const prepStartTime = Date.now();
+                const prepDuration = 400; // ZVÝŠENO: dříve 300 → 400
+                
+                // Úhly pro přípravu (lehké pokrčení)
+                const prepLeftThigh = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE - 0.15; // ZMĚNĚNO: 0.2 → 0.15
+                const prepRightThigh = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE - 0.15;
+                const prepLeftCalf = -FIGURE.CALF_SPREAD_ANGLE + 0.25; // ZMĚNĚNO: 0.3 → 0.25
+                const prepRightCalf = FIGURE.CALF_SPREAD_ANGLE + 0.25;
+                
+                function animatePrep() {
+                    const elapsed = Date.now() - prepStartTime;
+                    const progress = Math.min(elapsed / prepDuration, 1);
+                    
+                    const easeProgress = 1 - Math.pow(1 - progress, 3);
+                    
+                    // Postupné pokrčení
+                    state.leftThighAngle = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE + 
+                        (prepLeftThigh - (FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE)) * easeProgress;
+                    state.rightThighAngle = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE + 
+                        (prepRightThigh - (FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE)) * easeProgress;
+                    state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE + 
+                        (prepLeftCalf - (-FIGURE.CALF_SPREAD_ANGLE)) * easeProgress;
+                    state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE + 
+                        (prepRightCalf - FIGURE.CALF_SPREAD_ANGLE) * easeProgress;
+                    
+                    // Paže pro rovnováhu
+                    state.leftUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE + 
+                        (sitOnLeft ? -0.25 : 0.25) * easeProgress; // ZMĚNĚNO: 0.3 → 0.25
+                    state.rightUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE + 
+                        (sitOnLeft ? -0.08 : 0.08) * easeProgress; // ZMĚNĚNO: 0.1 → 0.08
+                    
+                    drawFigure();
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animatePrep);
+                    } else {
+                        // Fáze 3: Samotné sezení
+                        performSit(sitOnLeft, edgeX, originalX, originalY);
+                    }
+                }
+                
+                animatePrep();
+            }
+            
+            function performSit(sitOnLeft, edgeX, originalX, originalY) {
+                const sitStartTime = Date.now();
+                const sitDuration = 800; // ZVÝŠENO: dříve 600 → 800
+                
+                // Mírný náklon těla podle hrany
+                const bodyLean = sitOnLeft ? -0.12 : 0.12; // ZMĚNĚNO: 0.15 → 0.12
+                
+                // Výška posazení - spodní část těla klesne níž
+                const sitY = startY + FIGURE.TOTAL_HEIGHT * 0.25; // ZMĚNĚNO: 0.3 → 0.25
+                
+                function animateSit() {
+                    const elapsed = Date.now() - sitStartTime;
+                    const progress = Math.min(elapsed / sitDuration, 1);
+                    
+                    const easeProgress = 1 - Math.pow(1 - progress, 2);
+                    
+                    // Spuštění těla dolů (parabolicky) - ZPOMALENÉ
+                    const sitProgress = progress * 1.2; // ZMĚNĚNO: 1.5 → 1.2
+                    if (sitProgress <= 1) {
+                        // Fáze klesání
+                        state.y = startY + (sitY - startY) * sitProgress * (1 - sitProgress);
+                    } else {
+                        // Fáze usazení
+                        const settleProgress = sitProgress - 1;
+                        state.y = sitY - (FIGURE.TOTAL_HEIGHT * 0.03 * settleProgress); // ZMĚNĚNO: 0.05 → 0.03
+                    }
+                    
+                    // Animace končetin
+                    state.leftThighAngle = FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE + 
+                        (sitLeftThigh - (FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE)) * easeProgress;
+                    state.rightThighAngle = FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE + 
+                        (sitRightThigh - (FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE)) * easeProgress;
+                    state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE + 
+                        (sitLeftCalf - (-FIGURE.CALF_SPREAD_ANGLE)) * easeProgress;
+                    state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE + 
+                        (sitRightCalf - FIGURE.CALF_SPREAD_ANGLE) * easeProgress;
+                    
+                    state.leftUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE + 
+                        (sitLeftUpperArm - (FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE)) * easeProgress;
+                    state.rightUpperArmAngle = FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE + 
+                        (sitRightUpperArm - (FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE)) * easeProgress;
+                    state.leftForearmAngle = -FIGURE.FOREARM_SPREAD_ANGLE + 
+                        (sitLeftForearm - (-FIGURE.FOREARM_SPREAD_ANGLE)) * easeProgress;
+                    state.rightForearmAngle = FIGURE.FOREARM_SPREAD_ANGLE + 
+                        (sitRightForearm - FIGURE.FOREARM_SPREAD_ANGLE) * easeProgress;
+                    
+                    // Náklon těla
+                    state.bodyLean = bodyLean * easeProgress;
+                    // Hlava mírně nakloněná
+                    state.faceRotation = (sitOnLeft ? 0.08 : -0.08) * easeProgress; // ZMĚNĚNO: 0.1 → 0.08
+                    
+                    drawFigure();
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animateSit);
+                    } else {
+                        // Sezení dokončeno - zůstat sedět 2 sekundy
+                        updateStatus(sitOnLeft ? "Sedím na levé hraně..." : "Sedím na pravé hraně...");
+                        
+                        setTimeout(() => {
+                            standUp(sitOnLeft, edgeX, sitY, originalX, originalY);
+                        }, 2000);
+                    }
+                }
+                
+                animateSit();
+            }
+            
+            function standUp(sitOnLeft, edgeX, sitY, originalX, originalY) {
+                const standStartTime = Date.now();
+                const standDuration = 1000;
+                
+                updateStatus("Vstávám...");
+                
+                // DŮLEŽITÉ: Uložit si aktuální X pozici (edgeX)
+                const currentX = state.x; // Toto je edgeX, kde panáček sedí
+                
+                function animateStand() {
+                    const elapsed = Date.now() - standStartTime;
+                    const progress = Math.min(elapsed / standDuration, 1);
+                    
+                    const easeProgress = 1 - Math.pow(1 - progress, 3);
+                    
+                    // Zvednutí těla nahoru
+                    state.y = sitY + (originalY - sitY) * easeProgress;
+                    
+                    // X pozice ZŮSTÁVÁ NA edgeX během vstávání!
+                    // state.x = currentX; // To už je nastavené
+                    
+                    // Postupné narovnávání končetin
+                    state.leftThighAngle = sitLeftThigh + (FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE - sitLeftThigh) * easeProgress;
+                    state.rightThighAngle = sitRightThigh + (FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE - sitRightThigh) * easeProgress;
+                    state.leftCalfAngle = sitLeftCalf + (-FIGURE.CALF_SPREAD_ANGLE - sitLeftCalf) * easeProgress;
+                    state.rightCalfAngle = sitRightCalf + (FIGURE.CALF_SPREAD_ANGLE - sitRightCalf) * easeProgress;
+                    
+                    state.leftUpperArmAngle = sitLeftUpperArm + (FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE - sitLeftUpperArm) * easeProgress;
+                    state.rightUpperArmAngle = sitRightUpperArm + (FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE - sitRightUpperArm) * easeProgress;
+                    state.leftForearmAngle = sitLeftForearm + (-FIGURE.FOREARM_SPREAD_ANGLE - sitLeftForearm) * easeProgress;
+                    state.rightForearmAngle = sitRightForearm + (FIGURE.FOREARM_SPREAD_ANGLE - sitRightForearm) * easeProgress;
+                    
+                    // Narovnání těla a hlavy
+                    state.bodyLean *= (1 - easeProgress * 0.7);
+                    state.faceRotation *= (1 - easeProgress);
+                    
+                    drawFigure();
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animateStand);
+                    } else {
+                        // Nyní chůze zpět na původní místo!
+                        // Panáček je teď na currentX (edgeX) a potřebuje jít na originalX
+                        const distanceToWalk = Math.abs(originalX - currentX);
+                        
+                        if (distanceToWalk > 2) { // Pokud je co jít (více než 2px)
+                            walkBackToOriginal(originalX, originalY, sitOnLeft, currentX);
+                        } else {
+                            // Pokud už je (téměř) na místě
+                            finishSitting();
+                        }
+                    }
+                }
+                
+                function walkBackToOriginal(targetX, targetY, cameFromLeft, startX) {
+                    updateStatus("Vracím se na místo...");
+                    
+                    const walkBackStartTime = Date.now();
+                    const walkBackDistance = Math.abs(targetX - startX);
+                    const walkBackDuration = walkBackDistance * 40;
+                    const returnDirection = targetX > startX ? 'right' : 'left';
+                    
+                    // DEBUG: Zobrazit informace
+                    console.log("Chůze zpět: od", startX, "do", targetX, "vzdálenost", walkBackDistance);
+                    
+                    function animateWalkBack() {
+                        const elapsed = Date.now() - walkBackStartTime;
+                        const progress = Math.min(elapsed / walkBackDuration, 1);
+                        
+                        const easeProgress = 1 - Math.pow(1 - progress, 3);
+                        
+                        // DŮLEŽITÉ: Jdeme ze startX (edgeX) na targetX (originalX)
+                        state.x = startX + (targetX - startX) * easeProgress;
+                        
+                        // POMALÁ ANIMACE CHŮZE ZPĚT
+                        const phase = elapsed * 0.007;
+                        const leftLegForward = Math.sin(phase);
+                        const rightLegForward = Math.sin(phase + Math.PI);
+                        
+                        if (returnDirection === 'right') {
+                            // CHŮZE DOPRAVA ZPĚT - PRAVÁ NOHA VPŘEDU
+                            state.leftThighAngle = (FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE) - leftLegForward * 0.4;
+                            state.rightThighAngle = (FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE) - rightLegForward * 0.4;
+                            state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE + (leftLegForward > 0 ? leftLegForward * 0.5 : 0.15);
+                            state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE + (rightLegForward > 0 ? rightLegForward * 0.5 : 0.15);
+                            
+                            state.leftUpperArmAngle = (FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE) + leftLegForward * 0.3;
+                            state.rightUpperArmAngle = (FIGURE.DEFAULT_UPPER_ARM_ANGLE - FIGURE.ARM_SPREAD_ANGLE) + rightLegForward * 0.3;
+                            state.leftForearmAngle = -FIGURE.FOREARM_SPREAD_ANGLE + leftLegForward * 0.08;
+                            state.rightForearmAngle = -FIGURE.FOREARM_SPREAD_ANGLE + rightLegForward * 0.08;
+                            
+                            state.faceRotation = 0.1 * progress;
+                            
+                        } else {
+                            // CHŮZE DOLEVA ZPĚT - LEVÁ NOHA VPŘEDU
+                            state.leftThighAngle = (FIGURE.DEFAULT_THIGH_ANGLE - FIGURE.LEG_SPREAD_ANGLE) + leftLegForward * 0.4;
+                            state.rightThighAngle = (FIGURE.DEFAULT_THIGH_ANGLE + FIGURE.LEG_SPREAD_ANGLE) + rightLegForward * 0.4;
+                            state.leftCalfAngle = -FIGURE.CALF_SPREAD_ANGLE - (leftLegForward > 0 ? leftLegForward * 0.5 : 0.15);
+                            state.rightCalfAngle = FIGURE.CALF_SPREAD_ANGLE - (rightLegForward > 0 ? rightLegForward * 0.5 : 0.15);
+                            
+                            state.leftUpperArmAngle = (FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE) + rightLegForward * 0.3;
+                            state.rightUpperArmAngle = (FIGURE.DEFAULT_UPPER_ARM_ANGLE + FIGURE.ARM_SPREAD_ANGLE) + leftLegForward * 0.3;
+                            state.leftForearmAngle = FIGURE.FOREARM_SPREAD_ANGLE - rightLegForward * 0.12;
+                            state.rightForearmAngle = FIGURE.FOREARM_SPREAD_ANGLE - leftLegForward * 0.12;
+                            
+                            state.faceRotation = -0.1 * progress;
+                        }
+                        
+                        drawFigure();
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(animateWalkBack);
+                        } else {
+                            // Panáček je teď na targetX (originalX)
+                            console.log("Chůze dokončena: panáček na", state.x, "cíl byl", targetX);
+                            finishSitting();
+                        }
+                    }
+                    
+                    animateWalkBack();
+                }
+                
+                function finishSitting() {
+                    state.isMoving = false;
+                    state.currentAnimation = null;
+                    
+                    // Vrátit auru do normálu
+                    if (state.showAura) {
+                        setTimeout(() => updateAuraPosition(), 500);
+                    }
+                    
+                    const points = calculateNormalPoints(state.x, state.y);
+                    showBubble(points);
+                    updateStatus("Sezení dokončeno - zpět na místě");
+                    
+                    returnToDefaultPosition();
+                }
+                
+                animateStand();
+            }
+
+            // Spustit chůzi k hraně
+            walkToEdge();
+        }
+
+        // Bezpečná verze sezení
+        function safeSit() {
+            if (state.isMoving || state.isDragging || state.isBeingDragged || isFallingBack || !state.isOnPlatform) {
+                return;
+            }
+            
+            // Kontrola, zda je dostatečná šířka platformy
+            if (state.currentPlatform) {
+                const platformWidth = state.currentPlatform.right - state.currentPlatform.left;
+                if (platformWidth < FIGURE.HEAD_RADIUS * 4 + 40) {
+                    updateStatus("Platforma je příliš úzká pro sezení");
+                    return;
+                }
+            }
+            
+            sitOnEdge();
+        }        
 
         function stopAll() {
             state.isMoving = false;
